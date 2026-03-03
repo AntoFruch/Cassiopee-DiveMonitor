@@ -21,7 +21,7 @@ Project starts 2026-02-16
 '   * [nom de la tâche] requires/lasts X days/weeks
 '   * possibilité de coloriser avec "and is colored in {couleur}" (les mots clés des couleurs sont préshot par l'extension PlantUML)
 -- Gestion de Projet & Livrables Cassiopée--  
-[Plannification] requires 5 days and is colored in SkyBlue
+[Plannification] requires 12 days and is colored in SkyBlue
 
 -- Interface -- 
 [Doc Interface] requires 12 days and is colored in IndianRed
@@ -30,7 +30,7 @@ Project starts 2026-02-16
 [Vue Details] requires 3 week
 
 -- Traitement des données -- 
-[Doc données] requires 1 weeks and is colored in IndianRed
+[Doc backend] requires 2 weeks and is colored in IndianRed
 [Tests libdive] requires 1 weeks
 [Récupération données] requires 5 days
 [Wrapper] requires 5 days
@@ -50,8 +50,8 @@ Project starts 2026-02-16
 [Plannification] starts at 2026-02-16
 
 ' Phase doc et tests
-[Doc données] starts at 2026-02-16
-[Tests libdive] starts at [Doc données]'s end
+[Doc backend] starts at 2026-02-16
+[Tests libdive] starts at [Doc backend]'s end
 
 [Doc Interface] starts at 2026-02-16
 [Tests QML] starts at [Doc Interface]'s end
