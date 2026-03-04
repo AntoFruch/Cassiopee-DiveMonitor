@@ -6,6 +6,11 @@ Tu peux copier-coller tel quel dans un fichier `.md`.
 
 # 📘 **Récapitulatif complet – libdivecomputer (Markdown formaté)**
 
+# 0. Compiler du C avec libdivecomputer (pour tester)
+```bash
+gcc <c file> $(pkg-config --cflags --libs libdivecomputer)
+```
+
 # 1. Présentation générale
 
 **libdivecomputer** est une bibliothèque C permettant d’extraire les données depuis un ordinateur de plongée :
