@@ -75,7 +75,7 @@ ApplicationWindow {
             id: header
         }
         // ── Main display Space ──────────────────────────────────────────────────────
-            StackView{
+        StackView{
             id: stack
             Layout.fillWidth: true
             Layout.fillHeight: true
