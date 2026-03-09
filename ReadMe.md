@@ -1,4 +1,4 @@
-# Cassiopée SubSurface
+# Cassiopée DiveMonitor
 
 * Membres du Projet : BENOIS Loup, FRUCHET Antonin
 * Coordinateur : TAILLANDIER-LOIZE Thierry
