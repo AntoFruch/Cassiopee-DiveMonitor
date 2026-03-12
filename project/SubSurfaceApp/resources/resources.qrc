@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="back">images/back.png</file>
+        <file alias="plus">images/plus.png</file>
+        <file alias="settings">images/settings.png</file>
+    </qresource>
+    <qresource prefix="/dives">
+        <file alias="divesSample_3dives">dives/divesSamples_3dives.xml</file>
+    </qresource>
+</RCC>
