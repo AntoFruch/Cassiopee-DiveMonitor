@@ -52,13 +52,6 @@ Utilisation de ```libDiveComputer``` qui fera office de boîte noire entre l'ord
 
 ### Récupération des données
 
-Avec un programme simple, on doit recupérer toutes les plongées enregistrées dans l'appareil, ainsi que les données associées.
+Avec un programme simple, on doit recupérer toutes les plongées enregistrées dans l'appareil, ainsi que les données associées. 
 
-### Wrapper
-
-Les données récupérées ne sont pas facilement lisibles car peu formatés (struct C en sortie de libdivecomputer). C'est pourquoi un wrapper doit être implémenté pour réarranger ces données afin qu'elle soit facilement utilisable pour le code mais aussi facilement observable de manière "brute" par un utilisateur (eventuellement formatage type xml ou autre).
-
-Eventuellement un fichier par plongée dans un dossier externe au projet pour pouvoir ajouter / modifier / supprimer des plongée à la main aussi bien qu'avec l'application.
-
-
-
+L'utilisation de l'outil est décrite ici : [libdivecomputer.md](/documentation/libdivecomputer.md)
