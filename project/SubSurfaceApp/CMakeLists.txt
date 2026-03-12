@@ -16,7 +16,7 @@ qt_standard_project_setup(REQUIRES 6.8)
 set(CMAKE_AUTORCC ON)
 
 qt_add_executable(appSubSurfaceApp
-    src/main.cpp
+    src/main2.cpp
 )
 
 qt_add_qml_module(appSubSurfaceApp
@@ -30,6 +30,7 @@ qt_add_qml_module(appSubSurfaceApp
         qml/overlay/Header.qml
     RESOURCES
      resources/resources.qrc
+     SOURCES src/DCWrapper.h src/DCWrapper.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -47,6 +48,7 @@ target_link_libraries(appSubSurfaceApp PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Graphs
+    /usr/local/Cellar/libdivecomputer/0.9.0/lib/libdivecomputer.dylib
 )
 
 include(GNUInstallDirs)

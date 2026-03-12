@@ -4,6 +4,8 @@
 #include <QSettings>
 #include <QOperatingSystemVersion>
 
+#include <QDebug>
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
@@ -50,7 +52,6 @@ int main(int argc, char *argv[])
     engine.setInitialProperties({
         { "builtInStyles", builtInStyles }
     });
-
 
     // Generation du template QML
     engine.loadFromModule("SubSurfaceApp", "Main");
