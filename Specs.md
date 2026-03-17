@@ -48,7 +48,7 @@ Données à afficher dans la vue :
 
 Le back-end doit gérer la récupération et le traitement des données.
 
-Utilisation de ```libDiveComputer``` qui fera office de boîte noire entre l'ordinateur de plongée et la données. La librairie retournera toutes les données déjà un petit peu formatées.
+Utilisation de ```libDiveComputer``` qui fera office de boîte noire entre l'ordinateur de plongée et la données. La librairie retournera toutes les données.
 
 ### Récupération des données
 
@@ -56,9 +56,13 @@ Avec un programme simple, on doit recupérer toutes les plongées enregistrées 
 
 ### Wrapper
 
-Les données récupérées ne sont pas facilement lisibles car peu formatés (struct C en sortie de libdivecomputer). C'est pourquoi un wrapper doit être implémenté pour réarranger ces données afin qu'elle soit facilement utilisable pour le code mais aussi facilement observable de manière "brute" par un utilisateur (eventuellement formatage type xml ou autre).
+Le wrapper devra faire interface entre les appels à libDC et l'interface. **L'interface ne doit à aucun moment interagir directement avec libDC**.
 
-Eventuellement un fichier par plongée dans un dossier externe au projet pour pouvoir ajouter / modifier / supprimer des plongée à la main aussi bien qu'avec l'application.
+Il fournira les méthodes nécessaires pour :
+* indiquer quels sont les appareils supportés par l'application 
+* établir la connexion à l'appareil de plongée.
+* télécharger efficacement les plongées.
+* préparer au maximum les données pour faciliter le travail de l'interface.
 
 
 
