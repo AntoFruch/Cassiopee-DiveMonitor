@@ -44,11 +44,13 @@ set_target_properties(appSubSurfaceApp PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+find_library(LIBDC NAMES divecomputer REQUIRED)
+
 target_link_libraries(appSubSurfaceApp PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Graphs
-    /usr/local/Cellar/libdivecomputer/0.9.0/lib/libdivecomputer.dylib
+    ${LIBDC}
 )
 
 include(GNUInstallDirs)
