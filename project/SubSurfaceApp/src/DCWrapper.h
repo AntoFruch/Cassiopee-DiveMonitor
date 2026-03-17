@@ -23,9 +23,15 @@ public:
     /** Constructeur
      */
     DCWrapper();
+    /** Destructeur
+     */
     ~DCWrapper();
 
-
+    /** Connecte un appareil à l'application.
+     *  /!\ connexion série uniquement pour l'instant ! /!\
+     * @param vendor : nom du vendeur / marque de l'appareil (ex: Mares)
+     * @param product : nom du produit (ex: Quad Air)
+     */
     bool connect(const std::string& vendor,
                  const std::string& product);
 
@@ -33,10 +39,29 @@ public:
 
     void disconnect();
 
+    /** Liste des appareils supportés avec leurs modes de transports.
+     *  Structure du JSON :
+     * [
+     *   {
+     *     "vendor": "<Vendeur>",            // String: name of the manufacturer
+     *     "products": [                        // Array: list of products for this vendor
+     *       {
+     *         "name": "<Produit>",         // String: product/model name
+     *         "transports": [                  // Array: supported communication methods
+     *           "<TransportMethod1>",          // e.g. "USB", "Bluetooth", "Serial"
+     *           "<TransportMethod2>",
+     *           ...
+     *         ]
+     *       },
+     *       ...
+     *     ]
+     *   },
+     *   ...
+     * ]
+     */
     QJsonArray supportedDevices;
 
-    /** Stocke la liste des appareils supportées par libDC dans un objetJson
-     *
+    /** Stocke la liste des appareils supportées par libDC dans un objet JSON : supportedDevices
      */
     void updateSupportedDevices();
 
