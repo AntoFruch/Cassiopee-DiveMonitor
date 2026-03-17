@@ -1,5 +1,14 @@
 #ifndef DCTOOLSWRAPPER_H
 #define DCTOOLSWRAPPER_H
+
+#include <QFile>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QDebug>
+#include <QStandardPaths>
+
 #include <libdivecomputer/context.h>
 #include <libdivecomputer/device.h>
 #include <libdivecomputer/descriptor.h>
@@ -16,12 +25,20 @@ public:
     DCWrapper();
     ~DCWrapper();
 
+
     bool connect(const std::string& vendor,
                  const std::string& product);
 
+    bool isConnected() const;
+
     void disconnect();
 
-    bool isConnected() const;
+    QJsonArray supportedDevices;
+
+    /** Stocke la liste des appareils supportées par libDC dans un objetJson
+     *
+     */
+    void updateSupportedDevices();
 
 private:
     dc_context_t* context = nullptr;

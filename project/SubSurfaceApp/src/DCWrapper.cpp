@@ -1,5 +1,4 @@
 #include "DCWrapper.h"
-#include <QDebug> // for qDebug()
 
 DCWrapper::DCWrapper()
 {
@@ -130,3 +129,73 @@ bool DCWrapper::findDescriptor(const std::string& vendor,
     dc_iterator_free(iter);
     return false;
 }
+
+void DCWrapper::updateSupportedDevices(){
+    dc_iterator_t *iterator;
+    dc_descriptor_t *descriptor;
+
+    // JSON array to hold all vendors
+    QJsonArray vendorsArray;
+
+    // Get iterator over all supported dive computers
+    if (dc_descriptor_iterator(&iterator) != DC_STATUS_SUCCESS) {
+        fprintf(stderr, "Failed to get descriptors\n");
+        return;
+    }
+
+    // Map to store vendor -> products
+    QMap<QString, QJsonArray> vendorProductsMap;
+
+    // Iterate over all descriptors
+    while (dc_iterator_next(iterator, &descriptor) == DC_STATUS_SUCCESS) {
+        // Get vendor and product name, and transports
+        const char *vendorCStr = dc_descriptor_get_vendor(descriptor);
+        const char *productCStr = dc_descriptor_get_product(descriptor);
+        unsigned int transports = dc_descriptor_get_transports(descriptor);
+
+        if (!vendorCStr || !productCStr) {
+            dc_descriptor_free(descriptor);
+            continue;
+        }
+
+        QString vendor = QString::fromUtf8(vendorCStr);
+        QString product = QString::fromUtf8(productCStr);
+
+        // Convert transport flags to strings
+        QStringList transportMethods;
+        if (transports & DC_TRANSPORT_USB) transportMethods.append("USB");
+        if (transports & DC_TRANSPORT_USBHID) transportMethods.append("USBHID");
+        if (transports & DC_TRANSPORT_BLUETOOTH) transportMethods.append("Bluetooth");
+        if (transports & DC_TRANSPORT_BLE) transportMethods.append("Bluetooth Low Energy");
+        if (transports & DC_TRANSPORT_SERIAL) transportMethods.append("Serial");
+        if (transports & DC_TRANSPORT_IRDA) transportMethods.append("IrDA");
+
+        // Create product JSON object
+        QJsonObject productObj;
+        productObj["name"] = product;
+        QJsonArray transportsArray;
+        for (const QString &t : transportMethods)
+            transportsArray.append(t);
+        productObj["transports"] = transportsArray;
+
+        // Add product to vendor
+        vendorProductsMap[vendor].append(productObj);
+
+        dc_descriptor_free(descriptor); // free each descriptor after use
+    }
+
+    // Convert map to final JSON array
+    for (auto it = vendorProductsMap.begin(); it != vendorProductsMap.end(); ++it) {
+        QJsonObject vendorObj;
+        vendorObj["vendor"] = it.key();
+        vendorObj["products"] = it.value();
+        vendorsArray.append(vendorObj);
+    }
+
+    dc_iterator_free(iterator); // free the iterator
+
+    supportedDevices = vendorsArray;
+    return;
+}
+
+
