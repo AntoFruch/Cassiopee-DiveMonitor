@@ -52,8 +52,9 @@ Utilisation de ```libDiveComputer``` qui fera office de boîte noire entre l'ord
 
 ### Récupération des données
 
-Avec un programme simple, on doit recupérer toutes les plongées enregistrées dans l'appareil, ainsi que les données associées.
+Avec un programme simple, on doit recupérer toutes les plongées enregistrées dans l'appareil, ainsi que les données associées. 
 
+L'utilisation de l'outil est décrite ici : [libdivecomputer.md](/documentation/libdivecomputer.md)
 ### Wrapper
 
 Le wrapper devra faire interface entre les appels à libDC et l'interface. **L'interface ne doit à aucun moment interagir directement avec libDC**.

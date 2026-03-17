@@ -1,11 +1,12 @@
-# Cassiopée SubSurface
+# Cassiopée DiveMonitor
 
 * Membres du Projet : BENOIS Loup, FRUCHET Antonin
 * Coordinateur : TAILLANDIER-LOIZE Thierry
 
 ## TODO
-* Planning type Gantt.
-* Comprendre le fonctionnement de la librairie libdivecomputer.
+* revoir le diagramme de Gantt
+* tests libDC avec l'ordinateur
+* continuer l'interface
 
 ## Diagramme de Gantt 
 
