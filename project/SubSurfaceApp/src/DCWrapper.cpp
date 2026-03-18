@@ -202,141 +202,111 @@ void DCWrapper::updateSupportedDevices(){
     return;
 }
 
-typedef struct {
-    QXmlStreamWriter *xml;
-    unsigned int time;
-} xml_context_t;
 
+/* =====================================================
+ *
+ *  TELECHARGEMENT DES PLONGEES
+ *
+ * ================================================== */
 
 /* ------------------------------------------
    SAMPLE CALLBACK (profil)
 ------------------------------------------ */
 void sample_callback(dc_sample_type_t type,
-                    const dc_sample_value_t *value,
-                    void *userdata)
+                     const dc_sample_value_t *value,
+                     void *userdata)
 {
-    xml_context_t *ctx = (xml_context_t *)userdata;
+    auto *ctx = static_cast<SampleCallbackContext*>(userdata);
 
-    if (type == DC_SAMPLE_TIME) {
-        ctx->time = value->time;
+    switch (type) {
+    case DC_SAMPLE_TIME:
+        if (ctx->has_data)
+            ctx->samples->append(ctx->current);
+
+        ctx->current = dive_sample_t();
+        ctx->current.time = value->time;
+        ctx->has_data = true;
+        break;
+
+    case DC_SAMPLE_DEPTH:
+        ctx->current.depth = value->depth;
+        break;
+
+    case DC_SAMPLE_TEMPERATURE:
+        ctx->current.temperature = value->temperature;
+        break;
+
+    default:
+        break;
     }
-
-    if (type == DC_SAMPLE_DEPTH) {
-        ctx->xml->writeStartElement("sample");
-        ctx->xml->writeAttribute("time", QString::number(ctx->time));
-        ctx->xml->writeAttribute("depth", QString::number(value->depth));
-        ctx->xml->writeEndElement();
-    }
-
-    return;
 }
 
 
 /* ------------------------------------------
-   MAIN CALLBACK (1 plongée = 1 fichier)
+   MAIN CALLBACK
 ------------------------------------------ */
 int dive_callback(const unsigned char *data,
-             unsigned int size,
-             const unsigned char *fingerprint,
-             unsigned int fsize,
-             void *userdata)
+                  unsigned int size,
+                  const unsigned char *fingerprint,
+                  unsigned int fsize,
+                  void *userdata)
 {
-    dc_device_t *device = (dc_device_t *)userdata;
-    dc_parser_t *parser = NULL;
+    auto *cbCtx = static_cast<CallBackContext*>(userdata);
 
-    // ---------------------------------------------------------
-    // Préparer le dossier : AppDataLocation/dives
-    // ---------------------------------------------------------
-    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir dir(appDataPath);
-    if (!dir.exists()) {
-        dir.mkpath(".");  // crée AppDataLocation si nécessaire
-    }
-    if (!dir.exists("dives")) {
-        dir.mkdir("dives"); // crée le sous-dossier dives
-    }
-    dir.cd("dives");
+    dc_parser_t *parser = nullptr;
 
-    // ---------------------------------------------------------
-    // Nom de fichier = fingerprint en hex
-    // ---------------------------------------------------------
-    QByteArray fp_array((const char*)fingerprint, fsize);
-    QString filename = dir.filePath(fp_array.toHex() + ".xml");
-
-    QFile file(filename);
-    if (!file.open(QIODevice::WriteOnly)) {
-        fprintf(stderr, "Failed to open file\n");
+    if (dc_parser_new(&parser, cbCtx->device, data, size) != DC_STATUS_SUCCESS) {
+        qDebug() << "parser error";
         return 1;
     }
 
-    QXmlStreamWriter xml(&file);
-    xml.setAutoFormatting(true);
+    dive_t *dive = new dive_t();
 
-    xml.writeStartDocument();
-    xml.writeStartElement("dive");
+    dive->fingerprint = QByteArray((const char*)fingerprint, fsize);
 
-    /* ---------------------------------------------------------
-       Create parser
-       --------------------------------------------------------- */
-    if (dc_parser_new(&parser, device, data, size) != DC_STATUS_SUCCESS) {
-        fprintf(stderr, "Parser error\n");
-        return 1;
+    QVector<dive_sample_t> samples;
+
+    SampleCallbackContext sampleCtx;
+    sampleCtx.samples = &samples;
+
+    dc_parser_samples_foreach(parser, sample_callback, &sampleCtx);
+
+    if (sampleCtx.has_data)
+        samples.append(sampleCtx.current);
+
+    dive->samples = samples;
+
+    cbCtx->dives.append(dive);
+
+    #if DEBUG
+    if(cbCtx->dives.size()==1){
+        return 0;
     }
+    #endif
 
-    /* ---------------------------------------------------------
-       METADATA
-       --------------------------------------------------------- */
-    xml.writeStartElement("metadata");
-
-    unsigned int duration = 0;
-    double maxdepth = 0.0;
-
-    if (dc_parser_get_field(parser, DC_FIELD_DIVETIME, 0, &duration) == DC_STATUS_SUCCESS) {
-        xml.writeTextElement("duration", QString::number(duration));
-    }
-
-    if (dc_parser_get_field(parser, DC_FIELD_MAXDEPTH, 0, &maxdepth) == DC_STATUS_SUCCESS) {
-        xml.writeTextElement("maxdepth", QString::number(maxdepth));
-    }
-
-    xml.writeEndElement(); // metadata
-
-    /* ---------------------------------------------------------
-       PROFILE
-       --------------------------------------------------------- */
-    xml.writeStartElement("profile");
-
-    xml_context_t ctx;
-    ctx.xml = &xml;
-    ctx.time = 0;
-
-    dc_parser_samples_foreach(parser, sample_callback, &ctx);
-
-    xml.writeEndElement(); // profile
-
-    /* ---------------------------------------------------------
-       END
-       --------------------------------------------------------- */
-    xml.writeEndElement(); // dive
-    xml.writeEndDocument();
 
     dc_parser_destroy(parser);
-    file.close();
 
     return 1;
 }
 
-void DCWrapper::importDives(){
-    if (!isConnected()){
+void DCWrapper::importDives()
+{
+    if (!isConnected()) {
         qDebug() << "No device connected";
         return;
     }
 
-    if (dc_device_foreach(device, dive_callback, device) == DC_STATUS_SUCCESS){
+    CallBackContext ctx;
+    ctx.device = device;
+
+    if (dc_device_foreach(device, dive_callback, &ctx) != DC_STATUS_SUCCESS) {
         qDebug() << "Error while importing dives";
         return;
     }
 
-    qDebug() << "Dives imported successfully";
+    qDebug() << "Dives imported:" << ctx.dives.size();
+
+    dives = ctx.dives;
     return;
 }

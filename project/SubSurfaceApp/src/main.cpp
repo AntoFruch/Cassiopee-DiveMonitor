@@ -5,6 +5,7 @@
 #include <QOperatingSystemVersion>
 
 #include <QDebug>
+#include "DCWrapper"
 
 int main(int argc, char *argv[])
 {
