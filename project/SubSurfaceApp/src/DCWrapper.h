@@ -8,17 +8,22 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QStandardPaths>
+#include <QXmlStreamWriter>
+#include <QString>
+#include <QByteArray>
 
 #include <libdivecomputer/context.h>
 #include <libdivecomputer/device.h>
 #include <libdivecomputer/descriptor.h>
 #include <libdivecomputer/iostream.h>
 #include <libdivecomputer/serial.h>
+#include <libdivecomputer/parser.h>
 #include <iostream>
 
 
 class DCWrapper
 {
+
 public:
     /** Constructeur
      */
@@ -40,24 +45,6 @@ public:
     void disconnect();
 
     /** Liste des appareils supportés avec leurs modes de transports.
-     *  Structure du JSON :
-     * [
-     *   {
-     *     "vendor": "<Vendeur>",            // String: name of the manufacturer
-     *     "products": [                        // Array: list of products for this vendor
-     *       {
-     *         "name": "<Produit>",         // String: product/model name
-     *         "transports": [                  // Array: supported communication methods
-     *           "<TransportMethod1>",          // e.g. "USB", "Bluetooth", "Serial"
-     *           "<TransportMethod2>",
-     *           ...
-     *         ]
-     *       },
-     *       ...
-     *     ]
-     *   },
-     *   ...
-     * ]
      */
     QJsonArray supportedDevices;
 
@@ -65,11 +52,15 @@ public:
      */
     void updateSupportedDevices();
 
+    void importDives();
+
 private:
     dc_context_t* context = nullptr;
     dc_iostream_t* iostream = nullptr;
     dc_device_t* device = nullptr;
     dc_descriptor_t* descriptor = nullptr;
+
+    bool connected;
 
     bool openSerial();
     bool findDescriptor(const std::string& vendor,

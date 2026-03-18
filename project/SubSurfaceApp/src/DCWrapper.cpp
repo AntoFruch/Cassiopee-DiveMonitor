@@ -49,9 +49,13 @@ bool DCWrapper::connect(const std::string& vendor,
         qDebug() << "Failed to open device!";
         return false;
     }
+    this->connected = true;
 
     qDebug() << "Device connected successfully.";
     return true;
+}
+bool DCWrapper::isConnected() const {
+    return this->connected;
 }
 
 bool DCWrapper::openSerial()
@@ -198,4 +202,141 @@ void DCWrapper::updateSupportedDevices(){
     return;
 }
 
+typedef struct {
+    QXmlStreamWriter *xml;
+    unsigned int time;
+} xml_context_t;
 
+
+/* ------------------------------------------
+   SAMPLE CALLBACK (profil)
+------------------------------------------ */
+void sample_callback(dc_sample_type_t type,
+                    const dc_sample_value_t *value,
+                    void *userdata)
+{
+    xml_context_t *ctx = (xml_context_t *)userdata;
+
+    if (type == DC_SAMPLE_TIME) {
+        ctx->time = value->time;
+    }
+
+    if (type == DC_SAMPLE_DEPTH) {
+        ctx->xml->writeStartElement("sample");
+        ctx->xml->writeAttribute("time", QString::number(ctx->time));
+        ctx->xml->writeAttribute("depth", QString::number(value->depth));
+        ctx->xml->writeEndElement();
+    }
+
+    return;
+}
+
+
+/* ------------------------------------------
+   MAIN CALLBACK (1 plongée = 1 fichier)
+------------------------------------------ */
+int dive_callback(const unsigned char *data,
+             unsigned int size,
+             const unsigned char *fingerprint,
+             unsigned int fsize,
+             void *userdata)
+{
+    dc_device_t *device = (dc_device_t *)userdata;
+    dc_parser_t *parser = NULL;
+
+    // ---------------------------------------------------------
+    // Préparer le dossier : AppDataLocation/dives
+    // ---------------------------------------------------------
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir dir(appDataPath);
+    if (!dir.exists()) {
+        dir.mkpath(".");  // crée AppDataLocation si nécessaire
+    }
+    if (!dir.exists("dives")) {
+        dir.mkdir("dives"); // crée le sous-dossier dives
+    }
+    dir.cd("dives");
+
+    // ---------------------------------------------------------
+    // Nom de fichier = fingerprint en hex
+    // ---------------------------------------------------------
+    QByteArray fp_array((const char*)fingerprint, fsize);
+    QString filename = dir.filePath(fp_array.toHex() + ".xml");
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        fprintf(stderr, "Failed to open file\n");
+        return 1;
+    }
+
+    QXmlStreamWriter xml(&file);
+    xml.setAutoFormatting(true);
+
+    xml.writeStartDocument();
+    xml.writeStartElement("dive");
+
+    /* ---------------------------------------------------------
+       Create parser
+       --------------------------------------------------------- */
+    if (dc_parser_new(&parser, device, data, size) != DC_STATUS_SUCCESS) {
+        fprintf(stderr, "Parser error\n");
+        return 1;
+    }
+
+    /* ---------------------------------------------------------
+       METADATA
+       --------------------------------------------------------- */
+    xml.writeStartElement("metadata");
+
+    unsigned int duration = 0;
+    double maxdepth = 0.0;
+
+    if (dc_parser_get_field(parser, DC_FIELD_DIVETIME, 0, &duration) == DC_STATUS_SUCCESS) {
+        xml.writeTextElement("duration", QString::number(duration));
+    }
+
+    if (dc_parser_get_field(parser, DC_FIELD_MAXDEPTH, 0, &maxdepth) == DC_STATUS_SUCCESS) {
+        xml.writeTextElement("maxdepth", QString::number(maxdepth));
+    }
+
+    xml.writeEndElement(); // metadata
+
+    /* ---------------------------------------------------------
+       PROFILE
+       --------------------------------------------------------- */
+    xml.writeStartElement("profile");
+
+    xml_context_t ctx;
+    ctx.xml = &xml;
+    ctx.time = 0;
+
+    dc_parser_samples_foreach(parser, sample_callback, &ctx);
+
+    xml.writeEndElement(); // profile
+
+    /* ---------------------------------------------------------
+       END
+       --------------------------------------------------------- */
+    xml.writeEndElement(); // dive
+    xml.writeEndDocument();
+
+    dc_parser_destroy(parser);
+    file.close();
+
+    return 1;
+}
+
+void DCWrapper::importDives(){
+    if (!isConnected()){
+        qDebug() << "No device connected";
+        return;
+    }
+
+    if (dc_device_foreach(device, dive_callback, device) == DC_STATUS_SUCCESS){
+        qDebug() << "Error while importing dives";
+        return;
+    }
+
+    qDebug() << "Dives imported successfully";
+    return;
+}

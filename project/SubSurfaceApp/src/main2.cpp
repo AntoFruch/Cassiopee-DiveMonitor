@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     qDebug() << "init";
 
     DCWrapper dc;
-    dc.updateSupportedDevices();
-    qDebug() << dc.supportedDevices;
+    dc.connect("Mares", "Quad Air");
+    dc.importDives();
     return app.exec();
 }
