@@ -32,6 +32,8 @@ qt_add_qml_module(appSubSurfaceApp
         RESOURCES
         RESOURCES resources.qrc
         QML_FILES pages/AddDives.qml
+        QML_FILES pages/SettingsPage.qml
+        QML_FILES pages/DevicePickerDialog.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
