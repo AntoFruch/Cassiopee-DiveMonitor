@@ -8,7 +8,10 @@ find_package(Qt6 REQUIRED COMPONENTS
     Quick
     QuickControls2
     Graphs
+    Sql
 )
+
+find_library(LIBDC NAMES divecomputer REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -30,7 +33,9 @@ qt_add_qml_module(appSubSurfaceApp
         qml/overlay/Header.qml
     RESOURCES
      resources/resources.qrc
+     resources/database.db
      SOURCES src/DCWrapper.h src/DCWrapper.cpp
+     SOURCES src/divedatabase.h src/divedatabase.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -44,12 +49,11 @@ set_target_properties(appSubSurfaceApp PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-find_library(LIBDC NAMES divecomputer REQUIRED)
-
 target_link_libraries(appSubSurfaceApp PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Graphs
+    Qt6::Sql
     ${LIBDC}
 )
 

@@ -1,6 +1,6 @@
 #include "DCWrapper.h"
 
-DCWrapper::DCWrapper()
+DCWrapper::DCWrapper(DiveDatabase *db)
 {
     qDebug() << "Creating libdivecomputer context...";
     if (dc_context_new(&context) != DC_STATUS_SUCCESS) {
@@ -199,114 +199,5 @@ void DCWrapper::updateSupportedDevices(){
     dc_iterator_free(iterator); // free the iterator
 
     supportedDevices = vendorsArray;
-    return;
-}
-
-
-/* =====================================================
- *
- *  TELECHARGEMENT DES PLONGEES
- *
- * ================================================== */
-
-/* ------------------------------------------
-   SAMPLE CALLBACK (profil)
------------------------------------------- */
-void sample_callback(dc_sample_type_t type,
-                     const dc_sample_value_t *value,
-                     void *userdata)
-{
-    auto *ctx = static_cast<SampleCallbackContext*>(userdata);
-
-    switch (type) {
-    case DC_SAMPLE_TIME:
-        if (ctx->has_data)
-            ctx->samples->append(ctx->current);
-
-        ctx->current = dive_sample_t();
-        ctx->current.time = value->time;
-        ctx->has_data = true;
-        break;
-
-    case DC_SAMPLE_DEPTH:
-        ctx->current.depth = value->depth;
-        break;
-
-    case DC_SAMPLE_TEMPERATURE:
-        ctx->current.temperature = value->temperature;
-        break;
-
-    default:
-        break;
-    }
-}
-
-
-/* ------------------------------------------
-   MAIN CALLBACK
------------------------------------------- */
-int dive_callback(const unsigned char *data,
-                  unsigned int size,
-                  const unsigned char *fingerprint,
-                  unsigned int fsize,
-                  void *userdata)
-{
-    auto *cbCtx = static_cast<CallBackContext*>(userdata);
-
-    dc_parser_t *parser = nullptr;
-
-    if (dc_parser_new(&parser, cbCtx->device, data, size) != DC_STATUS_SUCCESS) {
-        qDebug() << "parser error";
-        return 1;
-    }
-
-    dive_t *dive = new dive_t();
-
-    dive->fingerprint = QByteArray((const char*)fingerprint, fsize);
-
-    QVector<dive_sample_t> samples;
-
-    SampleCallbackContext sampleCtx;
-    sampleCtx.samples = &samples;
-
-    dc_parser_samples_foreach(parser, sample_callback, &sampleCtx);
-
-    if (sampleCtx.has_data)
-        samples.append(sampleCtx.current);
-
-    dive->samples = samples;
-
-    cbCtx->dives.append(dive);
-
-    #if DEBUG
-    if(cbCtx->dives.size()==1){
-        return 0;
-    }
-    #endif
-
-
-    dc_parser_destroy(parser);
-
-    return 1;
-}
-
-void DCWrapper::importDives()
-{
-    if (!isConnected()) {
-        qDebug() << "No device connected";
-        return;
-    }
-
-    CallBackContext ctx;
-    ctx.device = device;
-
-    if (dc_device_foreach(device, dive_callback, &ctx) != DC_STATUS_SUCCESS) {
-        qDebug() << "Error while importing dives";
-        return;
-    }
-
-    qDebug() << "Dives imported:" << ctx.dives.size();
-
-    dives = ctx.dives;
     return;
 }
