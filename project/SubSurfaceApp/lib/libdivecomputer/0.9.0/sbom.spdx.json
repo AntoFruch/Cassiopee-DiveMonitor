@@ -1,0 +1,116 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "name": "SBOM-SPDX-libdivecomputer-0.9.0",
+  "creationInfo": {
+    "created": "2026-03-10T16:39:49Z",
+    "creators": [
+      "Tool: https://github.com/Homebrew/brew@5.0.16"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://formulae.brew.sh/spdx/libdivecomputer-0.9.0.json",
+  "documentDescribes": [
+    "SPDXRef-Archive-libdivecomputer-src",
+    "SPDXRef-Package-SPDXRef-libusb-1.0.29",
+    "SPDXRef-Compiler",
+    "SPDXRef-Bottle-libdivecomputer"
+  ],
+  "files": [],
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Archive-libdivecomputer-src",
+      "name": "libdivecomputer",
+      "versionInfo": "0.9.0",
+      "filesAnalyzed": false,
+      "licenseDeclared": "NOASSERTION",
+      "builtDate": "2025-06-30 20:24:35 UTC",
+      "licenseConcluded": "LGPL-2.1-or-later",
+      "downloadLocation": "https://www.libdivecomputer.org/releases/libdivecomputer-0.9.0.tar.gz",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a7b80b9083a2113a43280ee7b51d48d66ea5a779fc3fee57df7c451da0251c65"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SPDXRef-libusb-1.0.29",
+      "name": "libusb",
+      "versionInfo": "1.0.29",
+      "filesAnalyzed": false,
+      "licenseDeclared": "NOASSERTION",
+      "licenseConcluded": "LGPL-2.1-or-later",
+      "downloadLocation": "https://ghcr.io/v2/homebrew/core/libusb/blobs/sha256:ecf25be7aa95c979306f6054a6de8aa4dadd380f17341ffdda2259e48a01a213",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ecf25be7aa95c979306f6054a6de8aa4dadd380f17341ffdda2259e48a01a213"
+        }
+      ],
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:brew/libusb@1.0.29",
+          "referenceType": "purl"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Compiler",
+      "name": "clang",
+      "versionInfo": "15.2",
+      "filesAnalyzed": false,
+      "licenseDeclared": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "downloadLocation": "NOASSERTION",
+      "checksums": [],
+      "externalRefs": []
+    },
+    {
+      "SPDXID": "SPDXRef-Bottle-libdivecomputer",
+      "name": "libdivecomputer",
+      "versionInfo": "0.9.0",
+      "filesAnalyzed": false,
+      "licenseDeclared": "NOASSERTION",
+      "builtDate": "2025-06-30 20:24:35 UTC",
+      "licenseConcluded": "LGPL-2.1-or-later",
+      "downloadLocation": "https://ghcr.io/v2/homebrew/core/libdivecomputer/blobs/sha256:d971d6e5a414e494cd320bd235577034021a7ad6fe123c9f7f2a57b9e0879b69",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:brew/homebrew/core/libdivecomputer@0.9.0",
+          "referenceType": "purl"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d971d6e5a414e494cd320bd235577034021a7ad6fe123c9f7f2a57b9e0879b69"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-Package-SPDXRef-libusb-1.0.29",
+      "relationshipType": "RUNTIME_DEPENDENCY_OF",
+      "relatedSpdxElement": "SPDXRef-Bottle-libdivecomputer"
+    },
+    {
+      "spdxElementId": "SPDXRef-File-libdivecomputer",
+      "relationshipType": "PACKAGE_OF",
+      "relatedSpdxElement": "SPDXRef-Archive-libdivecomputer-src"
+    },
+    {
+      "spdxElementId": "SPDXRef-Compiler",
+      "relationshipType": "BUILD_TOOL_OF",
+      "relatedSpdxElement": "SPDXRef-Package-libdivecomputer-src"
+    }
+  ]
+}

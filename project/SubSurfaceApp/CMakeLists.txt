@@ -11,7 +11,11 @@ find_package(Qt6 REQUIRED COMPONENTS
     Sql
 )
 
-find_library(LIBDC NAMES divecomputer REQUIRED)
+find_library(LIBDC
+    NAMES divecomputer
+    PATHS ${CMAKE_SOURCE_DIR}/lib
+    REQUIRED
+)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
