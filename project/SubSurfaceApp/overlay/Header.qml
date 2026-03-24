@@ -27,13 +27,14 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         anchors.rightMargin: 16
         height: parent.height * 2 / 3
+        visible: header.settingsVisible
 
         source: "qrc:/images/settings"
         fillMode: Image.PreserveAspectFit
 
         MouseArea {
             anchors.fill: parent
-            onClicked: console.log("settings clicked")
+            onClicked: stack.push("../pages/SettingsPage.qml", {"deviceState": deviceState})
         }
     }
 

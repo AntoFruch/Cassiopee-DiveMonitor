@@ -23,15 +23,15 @@ qt_add_qml_module(appSubSurfaceApp
     URI SubSurfaceApp
     QML_FILES
         Main.qml
-        QML_FILES
-        QML_FILES
-        QML_FILES pages/DiveList.qml
-        QML_FILES overlay/Header.qml
-        QML_FILES overlay/AddDiveButton.qml
-        QML_FILES pages/DiveDetails.qml
-        RESOURCES
-        RESOURCES resources.qrc
-        QML_FILES pages/AddDives.qml
+        pages/DiveList.qml
+        overlay/Header.qml
+        overlay/AddDiveButton.qml
+        pages/DiveDetails.qml
+        pages/AddDives.qml
+        pages/DevicePickerDialog.qml
+        pages/SettingsPage.qml
+    RESOURCES
+        resources.qrc
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

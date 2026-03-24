@@ -24,6 +24,6 @@ Rectangle {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: stack.push("../pages/AddDives.qml")
+        onClicked: stack.push("../pages/AddDives.qml", {"deviceState": deviceState})
     }
 }

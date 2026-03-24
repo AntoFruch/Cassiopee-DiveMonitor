@@ -23,6 +23,30 @@ ApplicationWindow {
     readonly property color separatorColor : darkMode ? "#1C1C1C" : "#CCCCCC"
     readonly property color accentColor: "#1981BD"
 
+    QtObject {
+        id: deviceState
+
+        property string selectedBrand: "Mares"
+        property string selectedModel: "Quad Air"
+        property string selectedConnectionMode: "Serial"
+        property bool isDeviceConnected: true
+
+        property var deviceBrands: ["Mares", "Suunto", "Shearwater"]
+        property var deviceModelsByBrand: ({
+            "Mares": ["Quad Air", "Puck Pro", "Smart Air"],
+            "Suunto": ["EON Core", "D5", "Zoop Novo"],
+            "Shearwater": ["Perdix 2", "Teric", "Peregrine"]
+        })
+        property var connectionModes: ["Serial", "Bluetooth", "USB"]
+
+        readonly property string currentDeviceName: selectedBrand + " " + selectedModel
+        readonly property string currentDeviceDisplay: currentDeviceName + " | " + selectedConnectionMode
+
+        function modelsForBrand(brand) {
+            return deviceModelsByBrand[brand] || []
+        }
+    }
+
     // ── Hardcoded dive list | expected to be deleted soon ────────────────────────────────
     ListModel {
         id: diveModel
