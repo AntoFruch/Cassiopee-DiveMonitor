@@ -95,7 +95,6 @@ bool DiveDatabase::insertDive(const DiveData &dive)
                     ":max_temperature)"
                   );
 
-    query.bindValue(":id", dive.id);
     query.bindValue(":fingerprint", dive.fingerprint);
     query.bindValue(":dive_time", dive.dive_time);
     query.bindValue(":max_depth", dive.max_depth);
