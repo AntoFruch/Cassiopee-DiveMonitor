@@ -9,6 +9,7 @@ Rectangle {
     color: accentColor
 
     property var title
+    property bool settingsVisible: !stack.currentItem || !stack.currentItem.hideSettingsButton
 
     Text {
         anchors.centerIn: parent
