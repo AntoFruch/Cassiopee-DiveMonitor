@@ -10,3 +10,4 @@ tests/
 build/
 *.ini
 *.sql 
+*.db
