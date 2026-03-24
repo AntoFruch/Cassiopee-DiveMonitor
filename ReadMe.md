@@ -10,4 +10,8 @@
 
 ## Diagramme de Gantt 
 
-![Diagramme de Gantt](./plant-uml-out/gantt/GanttChart.svg)
+### Planning Projet : 
+![Gantt Projet](./gantt/ganttProjet.png)
+
+### Planning par personne :
+![Gantt /pers](./gantt/ganttParPersonne.png)

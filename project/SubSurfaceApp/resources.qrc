@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/images">
-        <file alias="back">resources/back.png</file>
-        <file alias="settings">resources/settings.png</file>
-        <file alias="plus">resources/plus.png</file>
-    </qresource>
-</RCC>

@@ -28,6 +28,7 @@ Rectangle {
         anchors.rightMargin: 16
         height: parent.height * 2 / 3
         visible: header.settingsVisible
+        visible: header.settingsVisible
 
         source: "qrc:/images/settings"
         fillMode: Image.PreserveAspectFit
