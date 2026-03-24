@@ -1,3 +1,5 @@
-# Documentation pour l'écriture du diagramme de Gantt avec PlantUML
+# Diagramme en ligne
 
-[Documentation en ligne](https://plantuml.com/fr/gantt-diagram)
+https://www.onlinegantt.com/#/gantt
+
+faire "Open" et mettre le fichier .gantt  
