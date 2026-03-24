@@ -21,13 +21,12 @@
 #include <iostream>
 
 #include "divedatabase.h"
-
-#define DEBUG 1
+#include "DiveDataStructure.h"
 
 class DCWrapper
 {
 private:
-    DiveDatabase *db;
+    DiveDatabase* db;
 
     dc_context_t* context = nullptr;
     dc_iostream_t* iostream = nullptr;
@@ -67,7 +66,7 @@ public:
 
     QJsonArray getSupportedDives(){return supportedDevices;}
 
-
+    void importDives();
 };
 
 #endif // DCTOOLSWRAPPER_H

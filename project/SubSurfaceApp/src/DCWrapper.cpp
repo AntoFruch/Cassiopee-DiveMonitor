@@ -1,4 +1,5 @@
 #include "DCWrapper.h"
+#define DEBUG 1
 
 DCWrapper::DCWrapper(DiveDatabase *db)
 {
@@ -8,6 +9,8 @@ DCWrapper::DCWrapper(DiveDatabase *db)
         throw std::runtime_error("Failed to create context");
     }
     qDebug() << "Context created successfully.";
+
+    this->db = db;
 }
 
 DCWrapper::~DCWrapper()
@@ -200,4 +203,153 @@ void DCWrapper::updateSupportedDevices(){
 
     supportedDevices = vendorsArray;
     return;
+}
+
+struct TempEntry {
+    double time = -1;
+    QVariant depth;
+    QVariant temperature;
+};
+
+void dive_sample_callback(dc_sample_type_t type,
+                          const dc_sample_value_t *value,
+                          void *userdata
+                          ){
+    // userdata est la liste finale des entries
+    QList<DiveEntry>* entries = (QList<DiveEntry>*) userdata;
+
+    // static pour garder l’état entre les appels
+    static TempEntry current;
+
+    switch(type) {
+        case DC_SAMPLE_TIME:
+            // Nouveau temps → on pousse l'ancien s'il est valide
+            if (current.time >= 0) {
+                DiveEntry e;
+                e.time = current.time;
+                e.depth = current.depth;
+                e.temperature = current.temperature;
+                entries->append(e);
+            }
+            // On réinitialise pour le prochain point
+            current.time = value->time;
+            current.depth = QVariant();
+            current.temperature = QVariant();
+            break;
+
+        case DC_SAMPLE_DEPTH:
+            current.depth = value->depth;
+            break;
+
+        case DC_SAMPLE_TEMPERATURE:
+            current.temperature = value->temperature;
+            break;
+
+        default:
+            // ignorer les autres types pour l'instant
+            break;
+    }
+}
+
+struct CallBackContext{
+    dc_device_t* device;
+    QList<DiveData> dives;
+#if DEBUG
+    int nbDive = 1;
+#endif
+
+};
+
+int dive_callback(const unsigned char *data,
+        unsigned int size,
+        const unsigned char *fingerprint,
+        unsigned int fsize,
+        void *userdata
+                  ){
+    CallBackContext* ctx = (CallBackContext*)userdata;
+
+#if DEBUG
+    if (ctx->nbDive <= ctx->dives.length()){
+        return 0;
+    }
+#endif
+
+    dc_parser_t* parser;
+
+    if (dc_parser_new(&parser, ctx->device, data, size) != DC_STATUS_SUCCESS){
+        qWarning() << "Error : could not create parser for dive " << fingerprint;
+        return 0;
+    }
+
+    // =================================================================================
+    // gerer les fingerprints
+    //                              ---------------
+    //                              | A CODER ICI |
+    //                              ---------------
+    // =================================================================================
+
+    DiveData dive;
+
+    dive.fingerprint = QByteArray(reinterpret_cast<const char*>(fingerprint), fsize);
+
+    // META-DONNEES
+    unsigned int uval;
+    double dval;
+    dc_datetime_t dtval;
+
+    // Date
+    if (dc_parser_get_datetime(parser, &dtval) == DC_STATUS_SUCCESS)
+        dive.date_time = dtval;
+
+    // Temps de plongée
+    if (dc_parser_get_field(parser, DC_FIELD_DIVETIME, 0, &uval) == DC_STATUS_SUCCESS)
+        dive.dive_time = uval;
+
+    // Profondeur max
+    if (dc_parser_get_field(parser, DC_FIELD_MAXDEPTH, 0, &dval) == DC_STATUS_SUCCESS)
+        dive.max_depth = dval;
+
+    // Profondeur moyenne
+    if (dc_parser_get_field(parser, DC_FIELD_AVGDEPTH, 0, &dval) == DC_STATUS_SUCCESS)
+        dive.avg_depth = dval;
+
+    // Pression atmosphérique
+    if (dc_parser_get_field(parser, DC_FIELD_ATMOSPHERIC, 0, &dval) == DC_STATUS_SUCCESS)
+        dive.atmos_pressure = dval;
+
+    // Température surface
+    if (dc_parser_get_field(parser, DC_FIELD_TEMPERATURE_SURFACE, 0, &dval) == DC_STATUS_SUCCESS)
+        dive.surface_temperature = dval;
+
+    // Température minimale
+    if (dc_parser_get_field(parser, DC_FIELD_TEMPERATURE_MINIMUM, 0, &dval) == DC_STATUS_SUCCESS)
+        dive.min_temperature = dval;
+
+    // Température maximale
+    if (dc_parser_get_field(parser, DC_FIELD_TEMPERATURE_MAXIMUM, 0, &dval) == DC_STATUS_SUCCESS)
+        dive.max_temperature = dval;
+
+    dc_parser_samples_foreach(parser, dive_sample_callback, &dive.entries);
+    ctx->dives.append(dive);
+    qDebug() << "dive " << ctx->dives.length() <<" has been imported ";
+    return 1;
+}
+
+void DCWrapper::importDives(){
+    if (!isConnected()){
+        qWarning() << "Error : device is not connected";
+        return;
+    }
+    struct CallBackContext ctx;
+    ctx.device = device;
+    if (dc_device_foreach(device, dive_callback, &ctx) != DC_STATUS_SUCCESS){
+        qWarning() << "Error : could not fetch dives";
+        return;
+    }
+
+    for (DiveData dive : ctx.dives){
+        db->insertDive(dive);
+    }
+
+    qDebug() << ctx.dives.length() << " dives imported successfully";
 }

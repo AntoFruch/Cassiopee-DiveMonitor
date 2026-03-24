@@ -4,6 +4,10 @@
 #include <QSqlError>
 #include <QDebug>
 
+#include <QDate>
+#include <QTime>
+#include <QDateTime>
+
 DiveDatabase& DiveDatabase::instance(const QString &dbPath)
 {
     static DiveDatabase instance(dbPath);
@@ -39,6 +43,7 @@ void DiveDatabase::initDatabase()
             "CREATE TABLE IF NOT EXISTS dives ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
             "fingerprint BLOB, "
+            "date_time DATE, "
             "dive_time INTEGER, "
             "max_depth REAL, "
             "avg_depth REAL, "
@@ -64,6 +69,18 @@ void DiveDatabase::initDatabase()
             )) {
         qWarning() << "Erreur création table dive_entries:" << query.lastError().text();
     }
+
+    // Création de l'association appareil / dernier fingerprint
+    if (!query.exec(
+            "CREATE TABLE IF NOT EXISTS fingerprints ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "vendor STRING, "
+            "product STRING, "
+            "fingerprint BLOB"
+            ");"
+            )){
+        qWarning() << "Erreur création table fingerprints:" << query.lastError().text();
+    }
 }
 
 bool DiveDatabase::insertDive(const DiveData &dive)
@@ -74,8 +91,8 @@ bool DiveDatabase::insertDive(const DiveData &dive)
     QSqlQuery query(m_db);
     // Insère la plongée
     query.prepare("INSERT INTO dives ("
-                    "id,"
                     "fingerprint,"
+                    "date_time, "
                     "dive_time,"
                     "max_depth,"
                     "avg_depth,"
@@ -84,8 +101,8 @@ bool DiveDatabase::insertDive(const DiveData &dive)
                     "min_temperature,"
                     "max_temperature)"
                 "VALUES ("
-                    ":id,"
                     ":fingerprint,"
+                    ":date_time,"
                     ":dive_time,"
                     ":max_depth,"
                     ":avg_depth,"
@@ -96,6 +113,16 @@ bool DiveDatabase::insertDive(const DiveData &dive)
                   );
 
     query.bindValue(":fingerprint", dive.fingerprint);
+    QDate date(dive.date_time.year,
+               dive.date_time.month,
+               dive.date_time.day);
+
+    QTime time(dive.date_time.hour,
+               dive.date_time.minute,
+               dive.date_time.second);
+
+    QDateTime datetime(date, time);
+    query.bindValue(":date_time", datetime.toString(Qt::ISODate));
     query.bindValue(":dive_time", dive.dive_time);
     query.bindValue(":max_depth", dive.max_depth);
     query.bindValue(":avg_depth", dive.avg_depth);
@@ -129,4 +156,18 @@ bool DiveDatabase::insertDive(const DiveData &dive)
     }
 
     return true;
+}
+
+bool DiveDatabase::saveFingerprint(QString vendor, Qstring product, QByteArray fp){
+    if (!m_db.isOpen())
+        return false;
+
+    QSqlQuery query(m_db);
+
+    query.prepare("INSERT INTO fingerprints (vendor, product, fingerprint"
+                  "VALUES (:vendor, :product, :fingerprint)"
+                  );
+    query.bindValue(":vendor", vendor);
+    query.bindValue(":product", product);
+    query.bindValue(":fingerprint", fp)
 }

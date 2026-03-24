@@ -36,6 +36,7 @@ qt_add_qml_module(appSubSurfaceApp
      resources/database.db
      SOURCES src/DCWrapper.h src/DCWrapper.cpp
      SOURCES src/divedatabase.h src/divedatabase.cpp
+     SOURCES src/DiveDataStructure.h
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
