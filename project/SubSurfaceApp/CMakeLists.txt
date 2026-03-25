@@ -19,7 +19,7 @@ qt_standard_project_setup(REQUIRES 6.8)
 set(CMAKE_AUTORCC ON)
 
 qt_add_executable(appSubSurfaceApp
-    src/main2.cpp
+    src/main.cpp
 )
 
 qt_add_qml_module(appSubSurfaceApp
@@ -38,6 +38,8 @@ qt_add_qml_module(appSubSurfaceApp
      SOURCES src/divedatabase.h src/divedatabase.cpp
      SOURCES src/DiveDataStructure.h
      SOURCES src/divelistmodel.h src/divelistmodel.cpp
+        QML_FILES qml/pages/SettingsPage.qml
+        QML_FILES qml/pages/DevicePickerDialog.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
