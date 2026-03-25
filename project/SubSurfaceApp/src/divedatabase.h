@@ -11,12 +11,33 @@
 class DiveDatabase : public QObject {
     Q_OBJECT
 public:
+
     // Accès singleton
     static DiveDatabase& instance(const QString &dbPath = "");
     ~DiveDatabase();
 
+    // Insertion en base
+    /** Insertion d'un plongée dans la base de donnée
+     *
+     *  @param dive : reference vers la plongée ( structure DiveData )
+     */
     void insertDive(const DiveData &dive);
+
+    /** Update du nouveau fingerprint dans la base de donnée
+     *
+     *  @param vendor : nom du fabricant de l'appareil
+     *  @param product : nom du modèle
+     *  @param fp : fingerprint à insérer
+     */
     void saveFingerprint(QString vendor, QString product, QByteArray fp);
+
+    // Selection depuis la base
+    /** Selection du fingerprint
+     *
+     *  @param vendor : nom du fabricant de l'appareil
+     *  @param product : nom du modèle
+     *  @returns le fingerprint voulu s'il existe, un QByteArray vide sinon
+     */
     QByteArray getFingerprint(QString vendor, QString product);
 
 private:

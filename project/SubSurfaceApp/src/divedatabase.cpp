@@ -208,5 +208,4 @@ QByteArray DiveDatabase::getFingerprint(QString vendor, QString product){
         qWarning() << "Aucun fingerprint trouvé pour" << vendor << product;
         return QByteArray(); // Retourner vide si pas de résultat
     }
-
 }
