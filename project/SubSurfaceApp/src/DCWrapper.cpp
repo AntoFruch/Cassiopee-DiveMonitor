@@ -1,5 +1,5 @@
 #include "DCWrapper.h"
-#define DEBUG 1
+#define DEBUG 0
 
 DCWrapper::DCWrapper(DiveDatabase *db)
 {
@@ -32,17 +32,17 @@ DCWrapper::~DCWrapper()
     }
 }
 
-bool DCWrapper::connect(const std::string& vendor,
-                        const std::string& product)
+bool DCWrapper::connect(const QString& vendor,
+                        const QString& product)
 {
-    qDebug() << "Connecting to device:" << QString::fromStdString(vendor)<< "/" << QString::fromStdString(product);
+    qDebug() << "Connecting to device:" << vendor << "/" << product;
 
     if (!openSerial()) {
         qDebug() << "Failed to open serial connection!";
         return false;
     }
 
-    if (!findDescriptor(vendor, product)) {
+    if (!findDescriptor(vendor.toStdString(), product.toStdString())) {
         qDebug() << "Failed to find device descriptor!";
         return false;
     }
@@ -53,6 +53,9 @@ bool DCWrapper::connect(const std::string& vendor,
         return false;
     }
     this->connected = true;
+    this->vendor = vendor;
+    this->product = product;
+    this->last_fingerprint = db->getFingerprint(this->vendor, this->product);
 
     qDebug() << "Device connected successfully.";
     return true;
@@ -254,9 +257,11 @@ void dive_sample_callback(dc_sample_type_t type,
 struct CallBackContext{
     dc_device_t* device;
     QList<DiveData> dives;
-#if DEBUG
-    int nbDive = 1;
-#endif
+    QByteArray cur_fp;
+    QByteArray new_fp;
+    #if DEBUG
+    int nbDive = 3;
+    #endif
 
 };
 
@@ -274,23 +279,25 @@ int dive_callback(const unsigned char *data,
     }
 #endif
 
+    DiveData dive;
+
+    dive.fingerprint = QByteArray(reinterpret_cast<const char*>(fingerprint), fsize);
+
+    // si le fingerprint est le meme, on arrete, la plongée est deja importée.
+    if (dive.fingerprint == ctx->cur_fp){
+        return 0;
+    }
+    // sinon actualise le nouveau fingerprint et on continue.
+    else if (ctx->new_fp.isEmpty()){
+        ctx->new_fp = dive.fingerprint;
+    }
+
     dc_parser_t* parser;
 
     if (dc_parser_new(&parser, ctx->device, data, size) != DC_STATUS_SUCCESS){
         qWarning() << "Error : could not create parser for dive " << fingerprint;
         return 0;
     }
-
-    // =================================================================================
-    // gerer les fingerprints
-    //                              ---------------
-    //                              | A CODER ICI |
-    //                              ---------------
-    // =================================================================================
-
-    DiveData dive;
-
-    dive.fingerprint = QByteArray(reinterpret_cast<const char*>(fingerprint), fsize);
 
     // META-DONNEES
     unsigned int uval;
@@ -331,7 +338,7 @@ int dive_callback(const unsigned char *data,
 
     dc_parser_samples_foreach(parser, dive_sample_callback, &dive.entries);
     ctx->dives.append(dive);
-    qDebug() << "dive " << ctx->dives.length() <<" has been imported ";
+    qDebug() << "dive " << ctx->dives.length() <<"  fetched ";
     return 1;
 }
 
@@ -342,6 +349,7 @@ void DCWrapper::importDives(){
     }
     struct CallBackContext ctx;
     ctx.device = device;
+    ctx.cur_fp = this->last_fingerprint;
     if (dc_device_foreach(device, dive_callback, &ctx) != DC_STATUS_SUCCESS){
         qWarning() << "Error : could not fetch dives";
         return;
@@ -349,6 +357,11 @@ void DCWrapper::importDives(){
 
     for (DiveData dive : ctx.dives){
         db->insertDive(dive);
+    }
+
+    if (!ctx.new_fp.isEmpty()){
+        db->saveFingerprint(this->vendor, this->product, ctx.new_fp);
+        this->last_fingerprint = ctx.new_fp;
     }
 
     qDebug() << ctx.dives.length() << " dives imported successfully";

@@ -15,7 +15,9 @@ public:
     static DiveDatabase& instance(const QString &dbPath = "");
     ~DiveDatabase();
 
-    bool insertDive(const DiveData &dive);
+    void insertDive(const DiveData &dive);
+    void saveFingerprint(QString vendor, QString product, QByteArray fp);
+    QByteArray getFingerprint(QString vendor, QString product);
 
 private:
     explicit DiveDatabase(const QString &dbPath, QObject *parent = nullptr);

@@ -19,6 +19,7 @@
 #include <libdivecomputer/serial.h>
 #include <libdivecomputer/parser.h>
 #include <iostream>
+#include <stdlib.h>
 
 #include "divedatabase.h"
 #include "DiveDataStructure.h"
@@ -27,6 +28,10 @@ class DCWrapper
 {
 private:
     DiveDatabase* db;
+
+    QString vendor;
+    QString product;
+    QByteArray last_fingerprint;
 
     dc_context_t* context = nullptr;
     dc_iostream_t* iostream = nullptr;
@@ -53,8 +58,8 @@ public:
      * @param vendor : nom du vendeur / marque de l'appareil (ex: Mares)
      * @param product : nom du produit (ex: Quad Air)
      */
-    bool connect(const std::string& vendor,
-                 const std::string& product);
+    bool connect(const QString& vendor,
+                 const QString& product);
 
     bool isConnected() const;
 

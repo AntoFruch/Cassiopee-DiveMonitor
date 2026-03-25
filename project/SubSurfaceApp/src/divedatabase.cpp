@@ -74,19 +74,20 @@ void DiveDatabase::initDatabase()
     if (!query.exec(
             "CREATE TABLE IF NOT EXISTS fingerprints ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "vendor STRING, "
-            "product STRING, "
-            "fingerprint BLOB"
+            "vendor TEXT COLLATE NOCASE, "
+            "product TEXT COLLATE NOCASE, "
+            "fingerprint BLOB, "
+            "UNIQUE(vendor, product)"
             ");"
             )){
         qWarning() << "Erreur création table fingerprints:" << query.lastError().text();
     }
 }
 
-bool DiveDatabase::insertDive(const DiveData &dive)
+void DiveDatabase::insertDive(const DiveData &dive)
 {
     if (!m_db.isOpen())
-        return false;
+        return ;
 
     QSqlQuery query(m_db);
     // Insère la plongée
@@ -133,7 +134,7 @@ bool DiveDatabase::insertDive(const DiveData &dive)
 
     if (!query.exec()) {
         qWarning() << "Erreur insertion dive:" << query.lastError().text();
-        return false;
+        return;
     }
 
     // Récupère l'id auto-incrémenté
@@ -151,23 +152,61 @@ bool DiveDatabase::insertDive(const DiveData &dive)
 
         if (!query.exec()) {
             qWarning() << "Erreur insertion dive_entry:" << query.lastError().text();
-            return false;
+            return ;
         }
     }
 
-    return true;
+    return ;
 }
 
-bool DiveDatabase::saveFingerprint(QString vendor, Qstring product, QByteArray fp){
+void DiveDatabase::saveFingerprint(QString vendor, QString product, QByteArray fp){
     if (!m_db.isOpen())
-        return false;
+        return ;
 
     QSqlQuery query(m_db);
 
-    query.prepare("INSERT INTO fingerprints (vendor, product, fingerprint"
-                  "VALUES (:vendor, :product, :fingerprint)"
-                  );
+    query.prepare(
+        "INSERT INTO fingerprints (vendor, product, fingerprint) "
+        "VALUES (:vendor, :product, :fingerprint) "
+        "ON CONFLICT(vendor, product) DO UPDATE SET fingerprint = :fingerprint"
+        );
     query.bindValue(":vendor", vendor);
     query.bindValue(":product", product);
-    query.bindValue(":fingerprint", fp)
+    query.bindValue(":fingerprint", fp);
+
+    if (!query.exec()) {
+        qWarning() << "Erreur insertion fingerprints:" << query.lastError().text();
+        return ;
+    }
+    return;
+}
+
+
+QByteArray DiveDatabase::getFingerprint(QString vendor, QString product){
+    if (!m_db.isOpen()){
+        return NULL;
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare(
+        "SELECT fingerprint from fingerprints "
+        "WHERE vendor = :vendor AND product = :product"
+        );
+    query.bindValue(":vendor", vendor);
+    query.bindValue(":product", product);
+
+    if (!query.exec()) {
+        qWarning() << "Erreur selection fingerprints:" << query.lastError().text();
+        return NULL;
+    }
+
+    if (query.next()) {
+        QByteArray fingerprint = query.value(0).toByteArray(); // Récupération du champ
+        return fingerprint;
+    } else {
+        qWarning() << "Aucun fingerprint trouvé pour" << vendor << product;
+        return QByteArray(); // Retourner vide si pas de résultat
+    }
+
 }

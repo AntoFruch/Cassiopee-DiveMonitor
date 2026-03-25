@@ -27,6 +27,5 @@ int main(int argc, char *argv[])
 
     dc.importDives();
 
-
     return app.exec();
 }
