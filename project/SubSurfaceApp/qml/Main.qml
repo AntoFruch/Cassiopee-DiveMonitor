@@ -29,25 +29,36 @@ ApplicationWindow {
         property string selectedBrand: "Mares"
         property string selectedModel: "Quad Air"
         property string selectedConnectionMode: "Serial"
-        property bool isDeviceConnected: true
+        property bool isDeviceConnected: false
 
-        property var deviceBrands: ["Mares", "Suunto", "Shearwater"]
-        property var deviceModelsByBrand: ({
-            "Mares": ["Quad Air", "Puck Pro", "Smart Air"],
-            "Suunto": ["EON Core", "D5", "Zoop Novo"],
-            "Shearwater": ["Perdix 2", "Teric", "Peregrine"]
-        })
-        property var connectionModes: ["Serial", "Bluetooth", "USB"]
+        readonly property var devices: supportedDevices;
 
         readonly property string currentDeviceName: selectedBrand + " " + selectedModel
         readonly property string currentDeviceDisplay: currentDeviceName + " | " + selectedConnectionMode
 
         function modelsForBrand(brand) {
-            return deviceModelsByBrand[brand] || []
+            let entry = devices.find(d => d.vendor === brand)
+            if (!entry)
+                return []
+
+            return entry.products.map(p => p.name)
+        }
+
+        function connectionModesFor(brand, model) {
+            let entry = devices.find(d => d.vendor === brand)
+            if (!entry)
+                return []
+
+            let product = entry.products.find(p => p.name === model)
+            if (!product)
+                return []
+
+            return product.transports
         }
     }
 
     // ── Hardcoded dive list | expected to be deleted soon ────────────────────────────────
+    /*
     ListModel {
         id: diveModel
         ListElement { name: "Cool Dive";        date: "10/10/2026" }
@@ -87,6 +98,7 @@ ApplicationWindow {
         ListElement { name: "Manta Point 3";    date: "10/11/2026" }
         ListElement { name: "Turtle Bay 3";     date: "12/11/2026" }
     }
+*/
 
 
     // ── Root column ──────────────────────────────────────────────────────────
@@ -108,7 +120,7 @@ ApplicationWindow {
             }
 
             initialItem: Pages.DiveList {
-                diveModel: diveModel
+                model: diveModel
             }
         }
     }

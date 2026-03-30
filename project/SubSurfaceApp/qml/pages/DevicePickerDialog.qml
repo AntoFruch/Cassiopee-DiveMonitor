@@ -78,13 +78,18 @@ Dialog {
 
                 ComboBox {
                     id: brandComboBox
-                    model: root.deviceState.deviceBrands
-                    currentIndex: Math.max(0, root.deviceState.deviceBrands.indexOf(root.pendingDeviceBrand))
+                    model: deviceState.devices.map(d => d.vendor)
+
+                    currentIndex: Math.max(
+                        0,
+                        model.indexOf(root.pendingDeviceBrand)
+                    )
+
                     Layout.fillWidth: true
 
                     onActivated: function(index) {
-                        root.pendingDeviceBrand = root.deviceState.deviceBrands[index]
-                        root.pendingDeviceModel = root.deviceState.modelsForBrand(root.pendingDeviceBrand)[0] || ""
+                        root.pendingDeviceBrand = model[index]
+                        root.pendingDeviceModel = deviceState.modelsForBrand(root.pendingDeviceBrand)[0] || ""
                     }
                 }
 
@@ -97,8 +102,14 @@ Dialog {
 
                 ComboBox {
                     id: deviceModelComboBox
-                    model: root.deviceState.modelsForBrand(root.pendingDeviceBrand)
-                    currentIndex: Math.max(0, model.indexOf(root.pendingDeviceModel))
+
+                    model: deviceState.modelsForBrand(root.pendingDeviceBrand)
+
+                    currentIndex: Math.max(
+                        0,
+                        model.indexOf(root.pendingDeviceModel)
+                    )
+
                     Layout.fillWidth: true
 
                     onActivated: function(index) {
@@ -115,12 +126,21 @@ Dialog {
 
                 ComboBox {
                     id: connectionComboBox
-                    model: root.deviceState.connectionModes
-                    currentIndex: Math.max(0, root.deviceState.connectionModes.indexOf(root.pendingConnectionMode))
+
+                    model: deviceState.connectionModesFor(
+                        root.pendingDeviceBrand,
+                        root.pendingDeviceModel
+                    )
+
+                    currentIndex: Math.max(
+                        0,
+                        model.indexOf(root.pendingConnectionMode)
+                    )
+
                     Layout.fillWidth: true
 
                     onActivated: function(index) {
-                        root.pendingConnectionMode = root.deviceState.connectionModes[index]
+                        root.pendingConnectionMode = model[index]
                     }
                 }
             }

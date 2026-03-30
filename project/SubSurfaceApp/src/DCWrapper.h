@@ -69,7 +69,7 @@ public:
      */
     void updateSupportedDevices();
 
-    QJsonArray getSupportedDives(){return supportedDevices;}
+    QJsonArray getSupportedDevices(){return supportedDevices;}
 
     void importDives();
 };

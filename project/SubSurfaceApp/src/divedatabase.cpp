@@ -114,16 +114,7 @@ void DiveDatabase::insertDive(const DiveData &dive)
                   );
 
     query.bindValue(":fingerprint", dive.fingerprint);
-    QDate date(dive.date_time.year,
-               dive.date_time.month,
-               dive.date_time.day);
-
-    QTime time(dive.date_time.hour,
-               dive.date_time.minute,
-               dive.date_time.second);
-
-    QDateTime datetime(date, time);
-    query.bindValue(":date_time", datetime.toString(Qt::ISODate));
+    query.bindValue(":date_time", dive.date_time.toString(Qt::ISODate));
     query.bindValue(":dive_time", dive.dive_time);
     query.bindValue(":max_depth", dive.max_depth);
     query.bindValue(":avg_depth", dive.avg_depth);
@@ -184,7 +175,7 @@ void DiveDatabase::saveFingerprint(QString vendor, QString product, QByteArray f
 
 QByteArray DiveDatabase::getFingerprint(QString vendor, QString product){
     if (!m_db.isOpen()){
-        return NULL;
+        return QByteArray();
     }
 
     QSqlQuery query(m_db);
@@ -203,9 +194,48 @@ QByteArray DiveDatabase::getFingerprint(QString vendor, QString product){
 
     if (query.next()) {
         QByteArray fingerprint = query.value(0).toByteArray(); // Récupération du champ
+        qDebug() << "fingerprint selected";
         return fingerprint;
     } else {
         qWarning() << "Aucun fingerprint trouvé pour" << vendor << product;
         return QByteArray(); // Retourner vide si pas de résultat
     }
+}
+
+QList<DiveData> DiveDatabase::getAllDives(){
+
+    if (!m_db.isOpen()){
+        return QList<DiveData>();
+    }
+
+    QList<DiveData> dives;
+    QSqlQuery query(m_db);
+
+    query.prepare(
+        "SELECT * FROM dives"
+        );
+
+    if (!query.exec()) {
+        qWarning() << "Erreur selection dives:" << query.lastError().text();
+        return QList<DiveData>();
+    }
+
+    while (query.next()) {
+        DiveData dive;
+
+        dive.id = query.value("id").toInt();
+        dive.fingerprint = query.value("fingerprint").toByteArray();
+        dive.date_time = query.value("date_time").toDateTime();
+        dive.dive_time = query.value("dive_time").toInt();
+        dive.max_depth = query.value("max_depth").toDouble();
+        dive.avg_depth = query.value("avg_depth").toDouble();
+        dive.atmos_pressure = query.value("atmos_pressure").toDouble();
+        dive.surface_temperature = query.value("surface_temperature").toDouble();
+        dive.min_temperature = query.value("min_temperature").toDouble();
+        dive.max_temperature = query.value("max_temperature").toDouble();
+
+        dives.append(dive);
+    }
+    qDebug() << dives.length() << " dives selected.";
+    return dives;
 }

@@ -8,5 +8,5 @@ Item {
     Layout.fillHeight: true
 
     required property var dive
-    property string title: dive.name
+    property string title: dive.date
 }

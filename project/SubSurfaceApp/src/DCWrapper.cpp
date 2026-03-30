@@ -305,8 +305,19 @@ int dive_callback(const unsigned char *data,
     dc_datetime_t dtval;
 
     // Date
-    if (dc_parser_get_datetime(parser, &dtval) == DC_STATUS_SUCCESS)
-        dive.date_time = dtval;
+    if (dc_parser_get_datetime(parser, &dtval) == DC_STATUS_SUCCESS){
+        QDate date(dtval.year, dtval.month, dtval.day);
+        QTime time(dtval.hour, dtval.minute, dtval.second);
+
+        QDateTime qdt(date, time, QTimeZone::UTC);
+
+        // Gestion du fuseau horaire (si valide)
+        if (dtval.timezone != DC_TIMEZONE_NONE) {
+            qdt = qdt.addSecs(dtval.timezone);
+        }
+
+        dive.date_time = qdt;
+    }
 
     // Temps de plongée
     if (dc_parser_get_field(parser, DC_FIELD_DIVETIME, 0, &uval) == DC_STATUS_SUCCESS)

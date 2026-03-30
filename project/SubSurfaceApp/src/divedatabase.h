@@ -40,6 +40,12 @@ public:
      */
     QByteArray getFingerprint(QString vendor, QString product);
 
+    /** recupère toute les plongées en base et les retourne sous forme de liste de DiveData
+     *
+     * @returns l'ensemble des plongée en base.
+     */
+    QList<DiveData> getAllDives();
+
 private:
     explicit DiveDatabase(const QString &dbPath, QObject *parent = nullptr);
 

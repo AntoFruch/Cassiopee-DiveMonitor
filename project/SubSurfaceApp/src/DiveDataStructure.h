@@ -2,6 +2,7 @@
 #define DIVEDATASTRUCTURE_H
 
 #include <libdivecomputer/parser.h>
+#include <QDateTime>
 
 struct DiveEntry {
     double time;
@@ -16,7 +17,7 @@ struct DiveData {
     QByteArray fingerprint;
 
     // META DONNEES
-    dc_datetime_t date_time;
+    QDateTime date_time;
     unsigned int dive_time;
     double max_depth;
     double avg_depth;
