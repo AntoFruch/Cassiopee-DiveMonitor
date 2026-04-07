@@ -50,7 +50,7 @@ Item {
             }
 
             Label {
-                text: deviceState.currentDeviceName
+                text: deviceState.selectedBrand  ? deviceState.selectedBrand + " " + deviceState.selectedModel : "No Device chosen, choose one";
                 font.pixelSize: 22
                 font.bold: true
                 color: textColor
@@ -70,7 +70,7 @@ Item {
                 }
 
                 Label {
-                    text: deviceState.isDeviceConnected ? "Device connected" : "No device connected"
+                    text: deviceState.isDeviceConnected ? "Device connected" : "Device not connected"
                     font.pixelSize: 14
                     color: textColor
                     Layout.fillWidth: true
@@ -115,19 +115,23 @@ Item {
                 Layout.preferredWidth: 206
                 Layout.preferredHeight: 62
 
+                enabled: dcWrapper.connected
+
                 background: Rectangle {
                     radius: 16
-                    color: accentColor
+                    color: parent.enabled ? accentColor : "#95a5a6"
                 }
 
                 contentItem: Text {
                     text: parent.text
-                    color: "white"
+                    color: parent.enabled ? "white" : "#ecf0f1"
                     font.pixelSize: 18
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
+
+                onClicked: dcWrapper.importDives()
             }
         }
     }

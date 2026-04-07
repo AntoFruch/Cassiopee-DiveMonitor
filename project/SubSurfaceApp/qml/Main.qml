@@ -33,9 +33,6 @@ ApplicationWindow {
 
         readonly property var devices: dcWrapper ? dcWrapper.supportedDevices : [];
 
-        readonly property string currentDeviceName: selectedBrand + " " + selectedModel
-        readonly property string currentDeviceDisplay: currentDeviceName + " | " + selectedConnectionMode
-
         function modelsForBrand(brand) {
             let entry = devices.find(d => d.vendor === brand)
             if (!entry)
