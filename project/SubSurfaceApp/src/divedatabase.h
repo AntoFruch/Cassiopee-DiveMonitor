@@ -13,7 +13,7 @@ class DiveDatabase : public QObject {
 public:
 
     // Accès singleton
-    static DiveDatabase& instance(const QString &dbPath = "");
+    static DiveDatabase& instance();
     ~DiveDatabase();
 
     // Insertion en base

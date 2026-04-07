@@ -6,7 +6,7 @@
 #include <QQmlContext>
 
 #include <QDebug>
-#include "DCWrapper.h"
+#include "divecomputerwrapper.h"
 #include "divelistmodel.h"
 
 int main(int argc, char *argv[])
@@ -50,23 +50,14 @@ int main(int argc, char *argv[])
     else if constexpr (QOperatingSystemVersion::currentType() == QOperatingSystemVersion::Windows)
         builtInStyles << "Windows";
 
+
+    DiveComputerWrapper wrapper;
+    engine.rootContext()->setContextProperty("dcWrapper", &wrapper);
+
     // Props à passer au QML initialement
     engine.setInitialProperties({
         { "builtInStyles", builtInStyles }
     });
-
-    auto &db = DiveDatabase::instance("/Users/antonin/Desktop/Cours/2A/Cassiopee-SubSurface/project/SubSurfaceApp/resources/database.db");
-
-    DCWrapper dc(&db);
-    dc.updateSupportedDevices();
-    QJsonArray supportedDevices = dc.getSupportedDevices();
-    qDebug() << supportedDevices;
-
-    DiveListModel diveModel;
-    diveModel.loadDives();
-
-    engine.rootContext()->setContextProperty("diveModel", &diveModel);
-    engine.rootContext()->setContextProperty("supportedDevices", supportedDevices);
 
     // Generation du template QML
     engine.loadFromModule("SubSurfaceApp", "Main");

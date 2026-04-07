@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(SubSurfaceApp VERSION 0.1 LANGUAGES CXX)
+enable_language(CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -12,8 +13,7 @@ find_package(Qt6 REQUIRED COMPONENTS
 )
 
 find_library(LIBDC
-    NAMES divecomputer
-    PATHS ${CMAKE_SOURCE_DIR}/lib
+    NAMES divecomputer libdivecomputer
     REQUIRED
 )
 
@@ -37,8 +37,7 @@ qt_add_qml_module(appSubSurfaceApp
         qml/overlay/Header.qml
     RESOURCES
      resources/resources.qrc
-     resources/database.db
-     SOURCES src/DCWrapper.h src/DCWrapper.cpp
+     SOURCES src/divecomputerwrapper.h src/divecomputerwrapper.cpp
      SOURCES src/divedatabase.h src/divedatabase.cpp
      SOURCES src/DiveDataStructure.h
      SOURCES src/divelistmodel.h src/divelistmodel.cpp

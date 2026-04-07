@@ -3,13 +3,27 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
-
 #include <QDate>
+#include <QDir>
 #include <QTime>
 #include <QDateTime>
+#include <QCoreApplication>
+#include <QStandardPaths>
 
-DiveDatabase& DiveDatabase::instance(const QString &dbPath)
+DiveDatabase& DiveDatabase::instance()
 {
+    // 1. Get the standard path for App Data
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+
+    // 2. Ensure the directory exists (Qt won't create it for you automatically)
+    QDir dir(appDataPath);
+    if (!dir.exists()) {
+        dir.mkpath(".");
+    }
+
+    // 3. Define the full database path
+    QString dbPath = dir.filePath("database.db");
+
     static DiveDatabase instance(dbPath);
     return instance;
 }

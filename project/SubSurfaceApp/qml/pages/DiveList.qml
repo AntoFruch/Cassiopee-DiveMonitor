@@ -12,7 +12,7 @@ ListView {
     bottomMargin: 80   // leave room so the + buttonn doesn't hide last item
     spacing: 0
 
-    model: diveModel
+    model: dcWrapper ? dcWrapper.divesModel : null
 
     delegate: Item {
         width: listView.width

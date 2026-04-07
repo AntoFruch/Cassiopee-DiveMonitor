@@ -1,8 +1,6 @@
-#include "DCWrapper.h"
-#define DEBUG 0
+#include "divecomputerwrapper.h"
 
-DCWrapper::DCWrapper(DiveDatabase *db)
-{
+DiveComputerWrapper::DiveComputerWrapper(QObject *parent) {
     qDebug() << "Creating libdivecomputer context...";
     if (dc_context_new(&context) != DC_STATUS_SUCCESS) {
         qDebug() << "Failed to create context!";
@@ -10,12 +8,40 @@ DCWrapper::DCWrapper(DiveDatabase *db)
     }
     qDebug() << "Context created successfully.";
 
-    this->db = db;
+    this->db = &DiveDatabase::instance();
+    this->divesModel = new DiveListModel(this);
+
+    this->updateSupportedDevices();
+    this->loadAllDives();
 }
 
-DCWrapper::~DCWrapper()
-{
-    qDebug() << "Cleaning up DCWrapper...";
+DiveComputerWrapper::~DiveComputerWrapper(){
+
+}
+
+bool DiveComputerWrapper::connectToDevice(const QString& vendor, const QString& product){
+    if (!openSerial())
+        return false;
+
+    if (!findDescriptor(vendor.toStdString(), product.toStdString()))
+        return false;
+
+    if (dc_device_open(&device, context, descriptor, iostream)
+        != DC_STATUS_SUCCESS)
+        return false;
+
+    this->connected = true;
+    this->vendor = vendor;
+    this->product = product;
+    this->last_fingerprint = db->getFingerprint(vendor, product);
+
+    emit connectedChanged();
+
+    return true;
+}
+
+void DiveComputerWrapper::disconnectDevice(){
+    qDebug() << "Disconnected from...";
     if (device) {
         qDebug() << "Closing device...";
         dc_device_close(device);
@@ -26,45 +52,11 @@ DCWrapper::~DCWrapper()
         dc_iostream_close(iostream);
     }
 
-    if (context) {
-        qDebug() << "Freeing context...";
-        dc_context_free(context);
-    }
+    emit connectedChanged();
+    return;
 }
 
-bool DCWrapper::connect(const QString& vendor,
-                        const QString& product)
-{
-    qDebug() << "Connecting to device:" << vendor << "/" << product;
-
-    if (!openSerial()) {
-        qDebug() << "Failed to open serial connection!";
-        return false;
-    }
-
-    if (!findDescriptor(vendor.toStdString(), product.toStdString())) {
-        qDebug() << "Failed to find device descriptor!";
-        return false;
-    }
-
-    if (dc_device_open(&device, context, descriptor, iostream)
-        != DC_STATUS_SUCCESS) {
-        qDebug() << "Failed to open device!";
-        return false;
-    }
-    this->connected = true;
-    this->vendor = vendor;
-    this->product = product;
-    this->last_fingerprint = db->getFingerprint(this->vendor, this->product);
-
-    qDebug() << "Device connected successfully.";
-    return true;
-}
-bool DCWrapper::isConnected() const {
-    return this->connected;
-}
-
-bool DCWrapper::openSerial()
+bool DiveComputerWrapper::openSerial()
 {
     qDebug() << "Opening serial devices...";
     dc_iterator_t* iter;
@@ -105,7 +97,7 @@ bool DCWrapper::openSerial()
     return false;
 }
 
-bool DCWrapper::findDescriptor(const std::string& vendor,
+bool DiveComputerWrapper::findDescriptor(const std::string& vendor,
                                const std::string& product)
 {
     qDebug() << "Looking for descriptor:" << QString::fromStdString(vendor)
@@ -140,7 +132,7 @@ bool DCWrapper::findDescriptor(const std::string& vendor,
     return false;
 }
 
-void DCWrapper::updateSupportedDevices(){
+void DiveComputerWrapper::updateSupportedDevices(){
     dc_iterator_t *iterator;
     dc_descriptor_t *descriptor;
 
@@ -205,6 +197,7 @@ void DCWrapper::updateSupportedDevices(){
     dc_iterator_free(iterator); // free the iterator
 
     supportedDevices = vendorsArray;
+    emit supportedDevicesChanged();
     return;
 }
 
@@ -225,32 +218,32 @@ void dive_sample_callback(dc_sample_type_t type,
     static TempEntry current;
 
     switch(type) {
-        case DC_SAMPLE_TIME:
-            // Nouveau temps → on pousse l'ancien s'il est valide
-            if (current.time >= 0) {
-                DiveEntry e;
-                e.time = current.time;
-                e.depth = current.depth;
-                e.temperature = current.temperature;
-                entries->append(e);
-            }
-            // On réinitialise pour le prochain point
-            current.time = value->time;
-            current.depth = QVariant();
-            current.temperature = QVariant();
-            break;
+    case DC_SAMPLE_TIME:
+        // Nouveau temps → on pousse l'ancien s'il est valide
+        if (current.time >= 0) {
+            DiveEntry e;
+            e.time = current.time;
+            e.depth = current.depth;
+            e.temperature = current.temperature;
+            entries->append(e);
+        }
+        // On réinitialise pour le prochain point
+        current.time = value->time;
+        current.depth = QVariant();
+        current.temperature = QVariant();
+        break;
 
-        case DC_SAMPLE_DEPTH:
-            current.depth = value->depth;
-            break;
+    case DC_SAMPLE_DEPTH:
+        current.depth = value->depth;
+        break;
 
-        case DC_SAMPLE_TEMPERATURE:
-            current.temperature = value->temperature;
-            break;
+    case DC_SAMPLE_TEMPERATURE:
+        current.temperature = value->temperature;
+        break;
 
-        default:
-            // ignorer les autres types pour l'instant
-            break;
+    default:
+        // ignorer les autres types pour l'instant
+        break;
     }
 }
 
@@ -259,17 +252,17 @@ struct CallBackContext{
     QList<DiveData> dives;
     QByteArray cur_fp;
     QByteArray new_fp;
-    #if DEBUG
+#if DEBUG
     int nbDive = 3;
-    #endif
+#endif
 
 };
 
 int dive_callback(const unsigned char *data,
-        unsigned int size,
-        const unsigned char *fingerprint,
-        unsigned int fsize,
-        void *userdata
+                  unsigned int size,
+                  const unsigned char *fingerprint,
+                  unsigned int fsize,
+                  void *userdata
                   ){
     CallBackContext* ctx = (CallBackContext*)userdata;
 
@@ -353,7 +346,7 @@ int dive_callback(const unsigned char *data,
     return 1;
 }
 
-void DCWrapper::importDives(){
+void DiveComputerWrapper::importDives(){
     if (!isConnected()){
         qWarning() << "Error : device is not connected";
         return;
@@ -375,5 +368,12 @@ void DCWrapper::importDives(){
         this->last_fingerprint = ctx.new_fp;
     }
 
+    emit divesImported(ctx.dives.length());
+
     qDebug() << ctx.dives.length() << " dives imported successfully";
 }
+
+void DiveComputerWrapper::loadAllDives(){
+    divesModel->loadDives();
+}
+
