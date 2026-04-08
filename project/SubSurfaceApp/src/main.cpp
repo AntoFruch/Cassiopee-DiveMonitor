@@ -3,6 +3,11 @@
 #include <QQuickStyle>
 #include <QSettings>
 #include <QOperatingSystemVersion>
+#include <QQmlContext>
+
+#include <QDebug>
+#include "divecomputerwrapper.h"
+#include "divelistmodel.h"
 
 int main(int argc, char *argv[])
 {
@@ -46,11 +51,13 @@ int main(int argc, char *argv[])
         builtInStyles << "Windows";
 
 
+    DiveComputerWrapper wrapper;
+    engine.rootContext()->setContextProperty("dcWrapper", &wrapper);
+
     // Props à passer au QML initialement
     engine.setInitialProperties({
         { "builtInStyles", builtInStyles }
     });
-
 
     // Generation du template QML
     engine.loadFromModule("SubSurfaceApp", "Main");

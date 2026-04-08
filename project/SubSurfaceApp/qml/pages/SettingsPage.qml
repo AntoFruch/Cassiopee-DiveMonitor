@@ -32,7 +32,7 @@ ScrollView {
 
     function settingValue(settingKey, fallbackValue) {
         if (settingKey === "device")
-            return deviceState.currentDeviceDisplay
+            return deviceState.selectedBrand ? deviceState.selectedBrand + " " + deviceState.selectedModel + " | " + deviceState.selectedConnectionMode : "No device chosen";
 
         return settingValues[settingKey] !== undefined ? settingValues[settingKey] : fallbackValue
     }

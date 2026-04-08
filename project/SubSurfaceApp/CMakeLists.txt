@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(SubSurfaceApp VERSION 0.1 LANGUAGES CXX)
+enable_language(CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -8,6 +9,12 @@ find_package(Qt6 REQUIRED COMPONENTS
     Quick
     QuickControls2
     Graphs
+    Sql
+)
+
+find_library(LIBDC
+    NAMES divecomputer libdivecomputer
+    REQUIRED
 )
 
 qt_standard_project_setup(REQUIRES 6.8)
@@ -30,6 +37,11 @@ qt_add_qml_module(appSubSurfaceApp
         qml/overlay/Header.qml
     RESOURCES
      resources/resources.qrc
+     SOURCES src/divecomputerwrapper.h src/divecomputerwrapper.cpp
+     SOURCES src/divedatabase.h src/divedatabase.cpp
+     SOURCES src/DiveDataStructure.h
+     SOURCES src/divelistmodel.h src/divelistmodel.cpp
+     SOURCES src/samplemodel.h src/samplemodel.cpp
         QML_FILES qml/pages/SettingsPage.qml
         QML_FILES qml/pages/DevicePickerDialog.qml
 )
@@ -49,6 +61,8 @@ target_link_libraries(appSubSurfaceApp PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Graphs
+    Qt6::Sql
+    ${LIBDC}
 )
 
 include(GNUInstallDirs)

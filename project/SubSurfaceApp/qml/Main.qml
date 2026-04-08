@@ -26,66 +26,32 @@ ApplicationWindow {
     QtObject {
         id: deviceState
 
-        property string selectedBrand: "Mares"
-        property string selectedModel: "Quad Air"
-        property string selectedConnectionMode: "Serial"
-        property bool isDeviceConnected: true
+        property string selectedBrand: ""
+        property string selectedModel: ""
+        property string selectedConnectionMode: ""
+        property bool isDeviceConnected: dcWrapper.connected
 
-        property var deviceBrands: ["Mares", "Suunto", "Shearwater"]
-        property var deviceModelsByBrand: ({
-            "Mares": ["Quad Air", "Puck Pro", "Smart Air"],
-            "Suunto": ["EON Core", "D5", "Zoop Novo"],
-            "Shearwater": ["Perdix 2", "Teric", "Peregrine"]
-        })
-        property var connectionModes: ["Serial", "Bluetooth", "USB"]
-
-        readonly property string currentDeviceName: selectedBrand + " " + selectedModel
-        readonly property string currentDeviceDisplay: currentDeviceName + " | " + selectedConnectionMode
+        readonly property var devices: dcWrapper ? dcWrapper.supportedDevices : [];
 
         function modelsForBrand(brand) {
-            return deviceModelsByBrand[brand] || []
-        }
-    }
+            let entry = devices.find(d => d.vendor === brand)
+            if (!entry)
+                return []
 
-    // ── Hardcoded dive list | expected to be deleted soon ────────────────────────────────
-    ListModel {
-        id: diveModel
-        ListElement { name: "Cool Dive";        date: "10/10/2026" }
-        ListElement { name: "Blue Hole";        date: "12/10/2026" }
-        ListElement { name: "Coral Garden";     date: "15/10/2026" }
-        ListElement { name: "Shark Point";      date: "18/10/2026" }
-        ListElement { name: "The Wall";         date: "20/10/2026" }
-        ListElement { name: "Night Dive";       date: "22/10/2026" }
-        ListElement { name: "Wreck Div";        date: "25/10/2026" }
-        ListElement { name: "Deep Blue";        date: "28/10/2026" }
-        ListElement { name: "Cave Dive";        date: "01/11/2026" }
-        ListElement { name: "Drift Dive";       date: "05/11/2026" }
-        ListElement { name: "Manta Point";      date: "08/11/2026" }
-        ListElement { name: "Turtle Bay";       date: "10/11/2026" }
-        ListElement { name: "Cool Dive 2";      date: "11/10/2026" }
-        ListElement { name: "Blue Hole 2";      date: "13/10/2026" }
-        ListElement { name: "Coral Garden 2";   date: "16/10/2026" }
-        ListElement { name: "Shark Point 2";    date: "19/10/2026" }
-        ListElement { name: "The Wall 2";       date: "21/10/2026" }
-        ListElement { name: "Night Dive 2";     date: "23/10/2026" }
-        ListElement { name: "Wreck Div 2";      date: "26/10/2026" }
-        ListElement { name: "Deep Blue 2";      date: "29/10/2026" }
-        ListElement { name: "Cave Dive 2";      date: "02/11/2026" }
-        ListElement { name: "Drift Dive 2";     date: "06/11/2026" }
-        ListElement { name: "Manta Point 2";    date: "09/11/2026" }
-        ListElement { name: "Turtle Bay 2";     date: "11/11/2026" }
-        ListElement { name: "Cool Dive 3";      date: "12/10/2026" }
-        ListElement { name: "Blue Hole 3";      date: "14/10/2026" }
-        ListElement { name: "Coral Garden 3";   date: "17/10/2026" }
-        ListElement { name: "Shark Point 3";    date: "20/10/2026" }
-        ListElement { name: "The Wall 3";       date: "22/10/2026" }
-        ListElement { name: "Night Dive 3";     date: "24/10/2026" }
-        ListElement { name: "Wreck Div 3";      date: "27/10/2026" }
-        ListElement { name: "Deep Blue 3";      date: "30/10/2026" }
-        ListElement { name: "Cave Dive 3";      date: "03/11/2026" }
-        ListElement { name: "Drift Dive 3";     date: "07/11/2026" }
-        ListElement { name: "Manta Point 3";    date: "10/11/2026" }
-        ListElement { name: "Turtle Bay 3";     date: "12/11/2026" }
+            return entry.products.map(p => p.name)
+        }
+
+        function connectionModesFor(brand, model) {
+            let entry = devices.find(d => d.vendor === brand)
+            if (!entry)
+                return []
+
+            let product = entry.products.find(p => p.name === model)
+            if (!product)
+                return []
+
+            return product.transports
+        }
     }
 
 
@@ -108,7 +74,6 @@ ApplicationWindow {
             }
 
             initialItem: Pages.DiveList {
-                diveModel: diveModel
             }
         }
     }

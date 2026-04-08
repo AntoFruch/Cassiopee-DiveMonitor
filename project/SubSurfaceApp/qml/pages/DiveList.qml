@@ -4,16 +4,15 @@ import QtQuick.Controls
 
 ListView {
     property string title: "Saved Dives"
-    required property var diveModel
 
     id: listView
     Layout.fillWidth: true
     Layout.fillHeight: true
     clip: true
-    bottomMargin: 80   // leave room so FAB doesn't hide last item
+    bottomMargin: 80   // leave room so the + buttonn doesn't hide last item
     spacing: 0
 
-    model: diveModel
+    model: dcWrapper ? dcWrapper.divesModel : null
 
     delegate: Item {
         width: listView.width
@@ -44,7 +43,7 @@ ListView {
                     leftMargin: 14
                     verticalCenter: parent.verticalCenter
                 }
-                text: model.name + " | " + model.date
+                text: model.date + " | Dive time :  " + model.diveTime + "s"
                 font.pixelSize: 16
                 font.bold: true
                 color: textColor
@@ -53,7 +52,8 @@ ListView {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    stack.push("DiveDetails.qml", {"dive": model})
+                    dcWrapper.loadDiveEntries(model.id);
+                    stack.push("DiveDetails.qml", {"dive": model});
                 }
             }
         }

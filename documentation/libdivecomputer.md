@@ -68,3 +68,7 @@ $ dctool list
         ```
     3. le <serial_interface> est <code>/dev/tty.usbserial-0001</code>
     
+    ## API DiveComputer (C)
+
+   ### Lien manpages
+   [manpages](https://libdivecomputer.org/doc/)

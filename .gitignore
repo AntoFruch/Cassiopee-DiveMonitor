@@ -9,3 +9,5 @@ lib/
 tests/
 build/
 *.ini
+*.sql 
+*.db
