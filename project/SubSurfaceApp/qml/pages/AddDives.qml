@@ -77,6 +77,42 @@ Item {
                 }
             }
 
+            Button {
+                text: deviceState.isDeviceConnected ? "Disconnect" : "Connect Device"
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 200
+                Layout.preferredHeight: 45
+
+                // Only allow clicking if a model is actually selected
+                enabled: deviceState.selectedModel !== ""
+
+                background: Rectangle {
+                    radius: 12
+                    // Blue-ish if connecting, Red-ish if disconnecting
+                    color: !deviceState.isDeviceConnected ? "#3498db" : "#e74c3c"
+                    opacity: parent.enabled ? 1.0 : 0.5
+                }
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "white"
+                    font.pixelSize: 14
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                onClicked: {
+                    if (!deviceState.isDeviceConnected) {
+                        dcWrapper.connectToDevice(deviceState.selectedBrand, deviceState.selectedModel)
+                    } else {
+                        dcWrapper.disconnectDevice()
+                    }
+                }
+            }
+
+            // ... existing Spacing / Import Dives Button ...
+
             Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 4

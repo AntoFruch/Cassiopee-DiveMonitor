@@ -253,3 +253,36 @@ QList<DiveData> DiveDatabase::getAllDives(){
     qDebug() << dives.length() << " dives selected.";
     return dives;
 }
+
+QList<DiveEntry> DiveDatabase::getDiveEntries(int id){
+    if (!m_db.isOpen()){
+        return QList<DiveEntry>();
+    }
+
+    QList<DiveEntry> entries;
+    QSqlQuery query(m_db);
+
+    qDebug() << "selecting dive" << id;
+
+    query.prepare(
+        "SELECT * FROM dive_entries WHERE dive_id=:id"
+        );
+
+    query.bindValue(":id", id);
+
+    if (!query.exec()) {
+        qWarning() << "Erreur selection dive_entries:" << query.lastError().text();
+        return QList<DiveEntry>();
+    }
+
+    while (query.next()){
+        DiveEntry entry;
+        entry.time = query.value("time").toDouble();
+        entry.temperature = query.value("temperature");
+        entry.depth = query.value("depth");
+
+        entries.append(entry);
+    }
+    qDebug() << entries.length() << "points selected";
+    return entries;
+}

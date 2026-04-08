@@ -23,9 +23,11 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "divedatabase.h"
+
+
 #include "DiveDataStructure.h"
 #include "divelistmodel.h"
+#include "samplemodel.h"
 
 class DiveComputerWrapper : public QObject   // ✅ inherit QObject
 {
@@ -35,6 +37,7 @@ class DiveComputerWrapper : public QObject   // ✅ inherit QObject
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(QJsonArray supportedDevices READ getSupportedDevices NOTIFY supportedDevicesChanged)
     Q_PROPERTY(DiveListModel* divesModel READ getListModel NOTIFY divesModelChanged)
+    Q_PROPERTY(SampleModel* samplesModel READ getSamplesModel NOTIFY samplesModelChanged)
 
 public:
     explicit DiveComputerWrapper(QObject *parent = nullptr); // ✅ updated ctor
@@ -53,6 +56,9 @@ public:
     Q_INVOKABLE void loadAllDives();
     DiveListModel* getListModel() const { return divesModel; }
 
+    Q_INVOKABLE void loadDiveEntries(int id);
+    SampleModel* getSamplesModel() const { return samplesModel; }
+
 
     bool isConnected() const { return connected; }
 
@@ -61,8 +67,9 @@ public:
 signals:
     void connectedChanged();
     void supportedDevicesChanged();
-    void divesImported(int count);   // 🔥 super useful for UI feedback
+    void divesImported();
     void divesModelChanged();
+    void samplesModelChanged();
 
 private:
     DiveDatabase* db;
@@ -80,6 +87,7 @@ private:
 
     QJsonArray supportedDevices;
     DiveListModel* divesModel;
+    SampleModel* samplesModel;
 
     bool openSerial();
     bool findDescriptor(const std::string& vendor,

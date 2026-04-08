@@ -41,6 +41,7 @@ qt_add_qml_module(appSubSurfaceApp
      SOURCES src/divedatabase.h src/divedatabase.cpp
      SOURCES src/DiveDataStructure.h
      SOURCES src/divelistmodel.h src/divelistmodel.cpp
+     SOURCES src/samplemodel.h src/samplemodel.cpp
         QML_FILES qml/pages/SettingsPage.qml
         QML_FILES qml/pages/DevicePickerDialog.qml
 )

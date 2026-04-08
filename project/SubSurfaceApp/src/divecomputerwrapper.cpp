@@ -10,6 +10,11 @@ DiveComputerWrapper::DiveComputerWrapper(QObject *parent) {
 
     this->db = &DiveDatabase::instance();
     this->divesModel = new DiveListModel(this);
+    this->samplesModel = new SampleModel(this);
+
+    connect(this, &DiveComputerWrapper::divesImported, this, [this](){
+        this->loadAllDives();
+    });
 
     this->updateSupportedDevices();
     this->loadAllDives();
@@ -228,7 +233,7 @@ void dive_sample_callback(dc_sample_type_t type,
             entries->append(e);
         }
         // On réinitialise pour le prochain point
-        current.time = value->time;
+        current.time = value->time / 1000;
         current.depth = QVariant();
         current.temperature = QVariant();
         break;
@@ -314,7 +319,7 @@ int dive_callback(const unsigned char *data,
 
     // Temps de plongée
     if (dc_parser_get_field(parser, DC_FIELD_DIVETIME, 0, &uval) == DC_STATUS_SUCCESS)
-        dive.dive_time = uval;
+        dive.dive_time = uval ;
 
     // Profondeur max
     if (dc_parser_get_field(parser, DC_FIELD_MAXDEPTH, 0, &dval) == DC_STATUS_SUCCESS)
@@ -368,7 +373,7 @@ void DiveComputerWrapper::importDives(){
         this->last_fingerprint = ctx.new_fp;
     }
 
-    emit divesImported(ctx.dives.length());
+    emit divesImported();
 
     qDebug() << ctx.dives.length() << " dives imported successfully";
 }
@@ -377,3 +382,7 @@ void DiveComputerWrapper::loadAllDives(){
     divesModel->loadDives();
 }
 
+void DiveComputerWrapper::loadDiveEntries(int id){
+    samplesModel->setEntries(id);
+    emit samplesModelChanged();
+}

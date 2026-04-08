@@ -21,6 +21,7 @@ QVariant DiveListModel::data(const QModelIndex &index, int role) const
     const DiveData &dive = m_dives[index.row()];
 
     switch (role) {
+        case IdRole: return dive.id;
         case DateRole: return dive.date_time.toString("dd/MM/yyyy");
         case DiveTimeRole: return dive.dive_time;
         case MaxDepthRole: return dive.max_depth;
@@ -36,6 +37,7 @@ QVariant DiveListModel::data(const QModelIndex &index, int role) const
 
 QHash<int, QByteArray> DiveListModel::roleNames() const {
     return {
+        {IdRole, "id"},
         {DateRole, "date"},
         {DiveTimeRole, "diveTime"},
         {MaxDepthRole, "maxDepth"},

@@ -46,6 +46,13 @@ public:
      */
     QList<DiveData> getAllDives();
 
+    /** Récupère les données de la plongées (pas les metadonnées)
+     *
+     *  @param id
+     *  @returns les données temporelles de la plongée
+     */
+    QList<DiveEntry> getDiveEntries(int id);
+
 private:
     explicit DiveDatabase(const QString &dbPath, QObject *parent = nullptr);
 

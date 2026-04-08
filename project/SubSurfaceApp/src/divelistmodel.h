@@ -12,7 +12,8 @@ class DiveListModel : public QAbstractListModel
 
 public:
     enum Roles {
-        DateRole = Qt::UserRole + 1,
+        IdRole = Qt::UserRole+1,
+        DateRole,
         DiveTimeRole,
         MaxDepthRole,
         AvgDepthRole,
