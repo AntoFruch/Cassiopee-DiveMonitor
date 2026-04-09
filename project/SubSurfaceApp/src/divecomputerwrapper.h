@@ -13,6 +13,7 @@
 #include <QXmlStreamWriter>
 #include <QString>
 #include <QByteArray>
+#include <QtConcurrent>
 
 #include <libdivecomputer/context.h>
 #include <libdivecomputer/device.h>
@@ -38,6 +39,7 @@ class DiveComputerWrapper : public QObject   // ✅ inherit QObject
     Q_PROPERTY(QJsonArray supportedDevices READ getSupportedDevices NOTIFY supportedDevicesChanged)
     Q_PROPERTY(DiveListModel* divesModel READ getListModel NOTIFY divesModelChanged)
     Q_PROPERTY(SampleModel* samplesModel READ getSamplesModel NOTIFY samplesModelChanged)
+    Q_PROPERTY(bool isImporting READ isImporting NOTIFY isImportingChanged)
 
 public:
     explicit DiveComputerWrapper(QObject *parent = nullptr); // ✅ updated ctor
@@ -52,6 +54,7 @@ public:
     Q_INVOKABLE void updateSupportedDevices();
 
     Q_INVOKABLE void importDives();
+    Q_INVOKABLE void importDivesAsync();
 
     Q_INVOKABLE void loadAllDives();
     DiveListModel* getListModel() const { return divesModel; }
@@ -61,13 +64,15 @@ public:
 
 
     bool isConnected() const { return connected; }
+    bool isImporting() const { return m_isImporting; }
 
     QJsonArray getSupportedDevices() const { return supportedDevices; }
 
 signals:
     void connectedChanged();
     void supportedDevicesChanged();
-    void divesImported();
+    void importationDone();
+    void isImportingChanged();
     void divesModelChanged();
     void samplesModelChanged();
 
@@ -84,6 +89,7 @@ private:
     dc_descriptor_t* descriptor = nullptr;
 
     bool connected = false;
+    bool m_isImporting = false;
 
     QJsonArray supportedDevices;
     DiveListModel* divesModel;
@@ -92,6 +98,11 @@ private:
     bool openSerial();
     bool findDescriptor(const std::string& vendor,
                         const std::string& product);
+    void setImporting(bool importing) {
+        if (m_isImporting == importing) return;
+        m_isImporting = importing;
+        emit isImportingChanged();
+    }
 };
 
 #endif // DIVECOMPUTERWRAPPER_H

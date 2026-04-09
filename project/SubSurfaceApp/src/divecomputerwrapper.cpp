@@ -12,7 +12,7 @@ DiveComputerWrapper::DiveComputerWrapper(QObject *parent) {
     this->divesModel = new DiveListModel(this);
     this->samplesModel = new SampleModel(this);
 
-    connect(this, &DiveComputerWrapper::divesImported, this, [this](){
+    connect(this, &DiveComputerWrapper::importationDone, this, [this](){
         this->loadAllDives();
     });
 
@@ -46,17 +46,25 @@ bool DiveComputerWrapper::connectToDevice(const QString& vendor, const QString& 
 }
 
 void DiveComputerWrapper::disconnectDevice(){
+    if (!device) {
+        qDebug() << "Disconnect ignored: No device handle exists.";
+        return;
+    }
+
     qDebug() << "Disconnected from...";
     if (device) {
         qDebug() << "Closing device...";
         dc_device_close(device);
+        device = nullptr;
     }
 
     if (iostream) {
         qDebug() << "Closing IO stream...";
         dc_iostream_close(iostream);
+        iostream = nullptr;
     }
 
+    this->connected = false;
     emit connectedChanged();
     return;
 }
@@ -373,9 +381,16 @@ void DiveComputerWrapper::importDives(){
         this->last_fingerprint = ctx.new_fp;
     }
 
-    emit divesImported();
-
     qDebug() << ctx.dives.length() << " dives imported successfully";
+}
+
+void DiveComputerWrapper::importDivesAsync(){
+    setImporting(true);
+    QtConcurrent::run([this](){
+        this->importDives();
+        setImporting(false);
+        emit importationDone();
+    });
 }
 
 void DiveComputerWrapper::loadAllDives(){

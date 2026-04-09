@@ -111,8 +111,6 @@ Item {
                 }
             }
 
-            // ... existing Spacing / Import Dives Button ...
-
             Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 4
@@ -146,12 +144,12 @@ Item {
             }
 
             Button {
-                text: "Import Dives"
+                text: dcWrapper.isImporting ? "Importing..." : "Import Dives"
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 206
                 Layout.preferredHeight: 62
 
-                enabled: dcWrapper.connected
+                enabled: dcWrapper.connected && !dcWrapper.isImporting;
 
                 background: Rectangle {
                     radius: 16
@@ -167,7 +165,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                onClicked: dcWrapper.importDives()
+                onClicked: dcWrapper.importDivesAsync()
             }
         }
     }
