@@ -29,6 +29,7 @@ ApplicationWindow {
         property string selectedBrand: ""
         property string selectedModel: ""
         property string selectedConnectionMode: ""
+        property string selectedPort: ""
         property bool isDeviceConnected: dcWrapper.connected
 
         readonly property var devices: dcWrapper ? dcWrapper.supportedDevices : [];

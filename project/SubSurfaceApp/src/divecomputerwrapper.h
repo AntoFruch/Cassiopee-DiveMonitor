@@ -20,6 +20,7 @@
 #include <libdivecomputer/descriptor.h>
 #include <libdivecomputer/iostream.h>
 #include <libdivecomputer/serial.h>
+#include <libdivecomputer/bluetooth.h>
 #include <libdivecomputer/parser.h>
 #include <iostream>
 #include <stdlib.h>
@@ -30,19 +31,19 @@
 #include "divelistmodel.h"
 #include "samplemodel.h"
 
-class DiveComputerWrapper : public QObject   // ✅ inherit QObject
+class DiveComputerWrapper : public QObject
 {
-    Q_OBJECT   // ✅ REQUIRED
+    Q_OBJECT
 
-    // 🔥 Expose properties to QML
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(QJsonArray supportedDevices READ getSupportedDevices NOTIFY supportedDevicesChanged)
+    Q_PROPERTY(QStringList availablePorts READ getAvailablePorts NOTIFY availablePortsChanged)
     Q_PROPERTY(DiveListModel* divesModel READ getListModel NOTIFY divesModelChanged)
     Q_PROPERTY(SampleModel* samplesModel READ getSamplesModel NOTIFY samplesModelChanged)
     Q_PROPERTY(bool isImporting READ isImporting NOTIFY isImportingChanged)
 
 public:
-    explicit DiveComputerWrapper(QObject *parent = nullptr); // ✅ updated ctor
+    explicit DiveComputerWrapper(QObject *parent = nullptr);
     ~DiveComputerWrapper();
 
     // 🔥 Make callable from QML
@@ -62,6 +63,9 @@ public:
     Q_INVOKABLE void loadDiveEntries(int id);
     SampleModel* getSamplesModel() const { return samplesModel; }
 
+    Q_INVOKABLE void refreshPorts(QString transport);
+    QStringList getAvailablePorts() const { return availablePorts; }
+
 
     bool isConnected() const { return connected; }
     bool isImporting() const { return m_isImporting; }
@@ -71,6 +75,7 @@ public:
 signals:
     void connectedChanged();
     void supportedDevicesChanged();
+    void availablePortsChanged();
     void importationDone();
     void isImportingChanged();
     void divesModelChanged();
@@ -92,6 +97,7 @@ private:
     bool m_isImporting = false;
 
     QJsonArray supportedDevices;
+    QStringList availablePorts;
     DiveListModel* divesModel;
     SampleModel* samplesModel;
 

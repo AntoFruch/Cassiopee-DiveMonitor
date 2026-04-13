@@ -69,6 +69,62 @@ void DiveComputerWrapper::disconnectDevice(){
     return;
 }
 
+dc_transport_t transportStringtoEnum(const QString& transport) {
+    static const QMap<QString, dc_transport_t> transportMap = {
+        {"Serial", DC_TRANSPORT_SERIAL},
+        {"Bluetooth Low Energy", DC_TRANSPORT_BLE},
+        {"Bluetooth", DC_TRANSPORT_BLUETOOTH}
+    };
+
+    return transportMap.value(transport, (dc_transport_t)0);
+}
+
+void DiveComputerWrapper::refreshPorts(QString transport) {
+    dc_transport_t transport_mode = transportStringtoEnum(transport);
+
+    dc_iterator_t* iter = nullptr; // Toujours initialiser à nullptr
+    const char* (*get_name)(void*) = nullptr;
+
+    // On vide la liste actuelle avant de rafraîchir
+    availablePorts.clear();
+
+    switch (transport_mode) {
+    case DC_TRANSPORT_SERIAL:
+        if (dc_serial_iterator_new(&iter, context, NULL) != DC_STATUS_SUCCESS) {
+            qDebug() << "Failed to create serial iterator!";
+            return;
+        }
+        get_name = reinterpret_cast<const char*(*)(void*)>(dc_serial_device_get_name);
+        break;
+
+    case DC_TRANSPORT_BLUETOOTH:
+        if (dc_bluetooth_iterator_new(&iter, context, NULL) != DC_STATUS_SUCCESS) {
+            qDebug() << "Failed to create bluetooth iterator! Check if BT is enabled.";
+            return;
+        }
+        get_name = reinterpret_cast<const char*(*)(void*)>(dc_bluetooth_device_get_name);
+        break;
+
+    default:
+        qDebug() << "Unsupported transport mode";
+        return;
+    }
+
+    void* dev = nullptr;
+    while (dc_iterator_next(iter, &dev) == DC_STATUS_SUCCESS) {
+        const char* name = get_name(dev);
+        if (name) {
+            availablePorts.append(QString::fromUtf8(name));
+            qDebug() << "Found device:" << name;
+        }
+        // Important : Libérer le device selon la doc de libdivecomputer si nécessaire
+        // dc_device_free((dc_device_t*)dev);
+    }
+
+    dc_iterator_free(iter); // ⚠️ NE PAS OUBLIER DE LIBÉRER L'ITÉRATEUR
+    emit availablePortsChanged(); // Notifier le QML
+}
+
 bool DiveComputerWrapper::openSerial()
 {
     qDebug() << "Opening serial devices...";
@@ -88,7 +144,6 @@ bool DiveComputerWrapper::openSerial()
         qDebug() << "Found serial device:" << name;
 
         if (strstr(name, "usb") || strstr(name, "USB")) {
-            qDebug() << "USB device found:" << name;
 
             if (dc_serial_open(&iostream, context, name)
                 == DC_STATUS_SUCCESS) {

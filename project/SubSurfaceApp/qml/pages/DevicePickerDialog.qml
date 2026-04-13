@@ -10,6 +10,7 @@ Dialog {
     property string pendingDeviceBrand: ""
     property string pendingDeviceModel: ""
     property string pendingConnectionMode: ""
+    property string pendingPort: ""
 
     parent: Overlay.overlay
     x: Math.round((parent.width - width) / 2)
@@ -23,6 +24,7 @@ Dialog {
         pendingDeviceBrand = deviceState.selectedBrand
         pendingDeviceModel = deviceState.selectedModel
         pendingConnectionMode = deviceState.selectedConnectionMode
+        pendingPort = deviceState.selectedPort
         open()
     }
 
@@ -30,6 +32,7 @@ Dialog {
         deviceState.selectedBrand = pendingDeviceBrand
         deviceState.selectedModel = pendingDeviceModel
         deviceState.selectedConnectionMode = pendingConnectionMode
+        deviceState.selectedPort = pendingPort
         close()
     }
 
@@ -140,7 +143,32 @@ Dialog {
                     Layout.fillWidth: true
 
                     onActivated: function(index) {
+                        dcWrapper.refreshPorts(model[index])
                         root.pendingConnectionMode = model[index]
+                    }
+                }
+
+                Label {
+                    text: "Port"
+                    font.bold: true
+                    color: textColor
+                    Layout.fillWidth: true
+                }
+
+                ComboBox {
+                    id: portComboBox
+
+                    model: dcWrapper.availablePorts
+
+                    currentIndex: Math.max(
+                        0,
+                        model.indexOf(root.pendingPort)
+                    )
+
+                    Layout.fillWidth: true
+
+                    onActivated: function(index) {
+                        root.pendingPort = model[index]
                     }
                 }
             }
