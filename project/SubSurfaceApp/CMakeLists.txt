@@ -12,8 +12,25 @@ find_package(Qt6 REQUIRED COMPONENTS
     Sql
 )
 
+find_path(LIBDC_INCLUDE_DIR
+    NAMES libdivecomputer/context.h
+    HINTS
+        ENV HOMEBREW_PREFIX
+        /home/linuxbrew/.linuxbrew
+        /opt/homebrew
+        /usr/local
+    PATH_SUFFIXES include
+    REQUIRED
+)
+
 find_library(LIBDC
     NAMES divecomputer libdivecomputer
+    HINTS
+            ENV HOMEBREW_PREFIX
+            /home/linuxbrew/.linuxbrew
+            /opt/homebrew
+            /usr/local
+    PATH_SUFFIXES lib
     REQUIRED
 )
 
@@ -64,6 +81,8 @@ target_link_libraries(appSubSurfaceApp PRIVATE
     Qt6::Sql
     ${LIBDC}
 )
+target_include_directories(appSubSurfaceApp PRIVATE ${LIBDC_INCLUDE_DIR})
+
 
 include(GNUInstallDirs)
 install(TARGETS appSubSurfaceApp

@@ -2,7 +2,7 @@
 #define DIVEDATABASE_H
 
 #include <QObject>
-#include <QSQLDatabase>
+#include <QSqlDatabase>
 #include <QString>
 #include <QList>
 
