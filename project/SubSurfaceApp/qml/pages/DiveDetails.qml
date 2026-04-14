@@ -38,6 +38,7 @@ Item {
                 height: 30
                 Label { text: "Time (s)"; Layout.fillWidth: true; font.bold: true }
                 Label { text: "Depth (m)"; Layout.fillWidth: true; font.bold: true }
+                Label { text: "Speed (m/s)"; Layout.fillWidth: true; font.bold: true }
                 Label { text: "Temp (°C)"; Layout.fillWidth: true; font.bold: true }
             }
 
@@ -52,6 +53,10 @@ Item {
                     }
                     Label {
                         text: model.depth.toFixed(2) + " m"
+                        Layout.fillWidth: true
+                    }
+                    Label {
+                        text: model.velocity.toFixed(2) + " m/s"
                         Layout.fillWidth: true
                     }
                     Label {

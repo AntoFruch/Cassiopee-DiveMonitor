@@ -154,21 +154,38 @@ Dialog {
                     color: textColor
                     Layout.fillWidth: true
                 }
-
-                ComboBox {
-                    id: portComboBox
-
-                    model: dcWrapper.availablePorts
-
-                    currentIndex: Math.max(
-                        0,
-                        model.indexOf(root.pendingPort)
-                    )
-
+                RowLayout{
                     Layout.fillWidth: true
+                    spacing: 8
 
-                    onActivated: function(index) {
-                        root.pendingPort = model[index]
+                    ComboBox {
+                        id: portComboBox
+
+                        model: dcWrapper.availablePorts
+
+                        currentIndex: Math.max(
+                            0,
+                            model.indexOf(root.pendingPort)
+                        )
+
+                        Layout.fillWidth: true
+
+                        onActivated: function(index) {
+                            root.pendingPort = model[index]
+                        }
+                    }
+
+                    Button {
+                        id: refreshButton
+                        text: "Refresh"
+                        // Optional: Use an icon instead of text for a cleaner look
+                        // icon.name: "view-refresh"
+
+                        Layout.preferredWidth: 80 // Adjust based on your UI needs
+
+                        onClicked: {
+                            dcWrapper.refreshPorts(pendingConnectionMode)
+                        }
                     }
                 }
             }

@@ -11,7 +11,8 @@ public:
     enum SampleRoles {
         TimeRole = Qt::UserRole + 1,
         DepthRole,
-        TempRole
+        TempRole,
+        VelocityRole
     };
 
     explicit SampleModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
