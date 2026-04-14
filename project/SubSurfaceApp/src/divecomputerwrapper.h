@@ -46,9 +46,10 @@ public:
     explicit DiveComputerWrapper(QObject *parent = nullptr);
     ~DiveComputerWrapper();
 
-    // 🔥 Make callable from QML
     Q_INVOKABLE bool connectToDevice(const QString& vendor,
-                                     const QString& product);
+                                     const QString& product,
+                                     const QString& connectionMode,
+                                     const QString& port);
 
     Q_INVOKABLE void disconnectDevice();
 
@@ -101,7 +102,7 @@ private:
     DiveListModel* divesModel;
     SampleModel* samplesModel;
 
-    bool openSerial();
+    bool openSerial(const QString& port);
     bool findDescriptor(const std::string& vendor,
                         const std::string& product);
     void setImporting(bool importing) {

@@ -104,7 +104,7 @@ Item {
 
                 onClicked: {
                     if (!deviceState.isDeviceConnected) {
-                        dcWrapper.connectToDevice(deviceState.selectedBrand, deviceState.selectedModel)
+                        dcWrapper.connectToDevice(deviceState.selectedBrand, deviceState.selectedModel, deviceState.selectedConnectionMode, deviceState.selectedPort)
                     } else {
                         dcWrapper.disconnectDevice()
                     }

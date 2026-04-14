@@ -24,8 +24,8 @@ DiveComputerWrapper::~DiveComputerWrapper(){
 
 }
 
-bool DiveComputerWrapper::connectToDevice(const QString& vendor, const QString& product){
-    if (!openSerial())
+bool DiveComputerWrapper::connectToDevice(const QString& vendor, const QString& product, const QString& connectionMode, const QString& port){
+    if (!openSerial(port))
         return false;
 
     if (!findDescriptor(vendor.toStdString(), product.toStdString()))
@@ -84,6 +84,7 @@ void DiveComputerWrapper::refreshPorts(QString transport) {
 
     dc_iterator_t* iter = nullptr; // Toujours initialiser à nullptr
     const char* (*get_name)(void*) = nullptr;
+    void (*device_free)(void*) = nullptr;
 
     // On vide la liste actuelle avant de rafraîchir
     availablePorts.clear();
@@ -95,6 +96,7 @@ void DiveComputerWrapper::refreshPorts(QString transport) {
             return;
         }
         get_name = reinterpret_cast<const char*(*)(void*)>(dc_serial_device_get_name);
+        device_free = reinterpret_cast<void(*)(void*)>(dc_serial_device_free);
         break;
 
     case DC_TRANSPORT_BLUETOOTH:
@@ -103,6 +105,7 @@ void DiveComputerWrapper::refreshPorts(QString transport) {
             return;
         }
         get_name = reinterpret_cast<const char*(*)(void*)>(dc_bluetooth_device_get_name);
+        device_free = reinterpret_cast<void(*)(void*)>(dc_bluetooth_device_free);
         break;
 
     default:
@@ -117,51 +120,19 @@ void DiveComputerWrapper::refreshPorts(QString transport) {
             availablePorts.append(QString::fromUtf8(name));
             qDebug() << "Found device:" << name;
         }
-        // Important : Libérer le device selon la doc de libdivecomputer si nécessaire
-        // dc_device_free((dc_device_t*)dev);
+        device_free(dev);
     }
-
-    dc_iterator_free(iter); // ⚠️ NE PAS OUBLIER DE LIBÉRER L'ITÉRATEUR
-    emit availablePortsChanged(); // Notifier le QML
+    dc_iterator_free(iter);
+    emit availablePortsChanged();
 }
 
-bool DiveComputerWrapper::openSerial()
+bool DiveComputerWrapper::openSerial(const QString& port)
 {
-    qDebug() << "Opening serial devices...";
-    dc_iterator_t* iter;
-
-    if (dc_serial_iterator_new(&iter, context, NULL)
-        != DC_STATUS_SUCCESS) {
-        qDebug() << "Failed to create serial iterator!";
-        return false;
+    if (dc_serial_open(&iostream, context, port.toUtf8().data()) == DC_STATUS_SUCCESS) {
+        qDebug() << "Serial device opened sucessfully";
+        return true;
     }
-
-    void* dev;
-
-    while (dc_iterator_next(iter, &dev) == DC_STATUS_SUCCESS) {
-        auto* serial = (dc_serial_device_t*)dev;
-        const char* name = dc_serial_device_get_name(serial);
-        qDebug() << "Found serial device:" << name;
-
-        if (strstr(name, "usb") || strstr(name, "USB")) {
-
-            if (dc_serial_open(&iostream, context, name)
-                == DC_STATUS_SUCCESS) {
-                qDebug() << "Serial device opened successfully:" << name;
-
-                dc_serial_device_free(serial);
-                dc_iterator_free(iter);
-                return true;
-            } else {
-                qDebug() << "Failed to open serial device:" << name;
-            }
-        }
-
-        dc_serial_device_free(serial);
-    }
-
-    qDebug() << "No suitable serial device found.";
-    dc_iterator_free(iter);
+    qDebug() << "Failed to Open serial device" << port;
     return false;
 }
 
