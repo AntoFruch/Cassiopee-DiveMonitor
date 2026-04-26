@@ -1,8 +1,12 @@
 #include "divelistmodel.h"
+#include "divecomputerwrapper.h"
 
 DiveListModel::DiveListModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+    connect(&DiveComputerWrapper::instance(), &DiveComputerWrapper::importationDone, this, [this](){
+        this->loadDives();
+    });
 }
 
 void DiveListModel::loadDives()

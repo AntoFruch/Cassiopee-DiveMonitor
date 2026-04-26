@@ -41,7 +41,8 @@ class DiveComputerWrapper : public QObject
     Q_PROPERTY(bool isImporting READ isImporting NOTIFY isImportingChanged)
 
 public:
-    explicit DiveComputerWrapper(QObject *parent = nullptr);
+    //accès singleton
+    static DiveComputerWrapper& instance();
     ~DiveComputerWrapper();
 
     Q_INVOKABLE bool connectToDevice(const QString& vendor,
@@ -73,6 +74,11 @@ signals:
     void isImportingChanged();
 
 private:
+    // constructeur privé et interdictions de copie
+    explicit DiveComputerWrapper(QObject *parent = nullptr);
+    DiveComputerWrapper(const DiveComputerWrapper&) = delete;
+    DiveComputerWrapper& operator=(const DiveComputerWrapper&) = delete;
+
     DiveDatabase* db;
 
     QString vendor;

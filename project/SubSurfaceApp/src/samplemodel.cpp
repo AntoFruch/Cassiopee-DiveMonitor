@@ -1,22 +1,43 @@
 #include "samplemodel.h"
 
 void SampleModel::setEntries(const int diveId) {
-    // 1. Fetch data from your database
-    QList<DiveEntry> entries = DiveDatabase::instance().getDiveEntries(diveId);
+    // 1. On charge TOUTES les données une seule fois
+    m_rawEntries = DiveDatabase::instance().getDiveEntries(diveId);
 
-    // 2. Convert your custom DiveEntry list into a list of QPointF
+    // 2. On affiche selon le mode par défaut
+    updateSeries();
+}
+
+void SampleModel::setDisplayMode(DisplayMode mode) {
+    if (m_currentMode == mode) return;
+
+    m_currentMode = mode;
+    updateSeries(); // On re-génère les points sans re-interroger la BDD
+}
+
+void SampleModel::updateSeries() {
     QList<QPointF> points;
-    points.reserve(entries.size());
+    points.reserve(m_rawEntries.size());
 
-    for (const auto &e : entries) {
-        // Here we map: Time -> X axis, Depth -> Y axis
-        // Note: Use .toDouble() if time/depth are QVariants
+    for (const auto &e : m_rawEntries) {
         double x = QVariant(e.time).toDouble();
-        double y = QVariant(e.depth).toDouble();
+        double y;
+
+        switch (m_currentMode){
+            case TEMPERATURE:
+                y = QVariant(e.temperature).toDouble();
+                break;
+            case DEPTH:
+                y = QVariant(e.depth).toDouble();
+                break;
+            case SPEED:
+                break;
+            default:
+                break;
+            }
 
         points.append(QPointF(x, y));
     }
 
-    // 3. Update the series. replace() is faster than clearing and appending 1 by 1.
     this->replace(points);
 }
