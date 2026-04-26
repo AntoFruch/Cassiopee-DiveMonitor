@@ -1,34 +1,21 @@
 #ifndef SAMPLEMODEL_H
 #define SAMPLEMODEL_H
 
-#include <QAbstractListModel>
+#include <QtGraphs/QLineSeries>
 #include "divedatabase.h"
 #include "DiveDataStructure.h"
 
-class SampleModel : public QAbstractListModel {
+// Inheriting from QLineSeries (or QScatterSeries) allows direct use in GraphsView
+class SampleModel : public QLineSeries {
     Q_OBJECT
 public:
-    enum SampleRoles {
-        TimeRole = Qt::UserRole + 1,
-        DepthRole,
-        TempRole,
-        VelocityRole
-    };
+    explicit SampleModel(QObject *parent = nullptr) : QLineSeries(parent) {}
 
-    explicit SampleModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
+    // Method to populate the series with data
+    Q_INVOKABLE void setEntries(const int diveId);
 
-    void setEntries(const int diveId);
-
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override {
-        return m_entries.size();
-    }
-
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-
-    QHash<int, QByteArray> roleNames() const override;
-
-private:
-    QList<DiveEntry> m_entries;
+    // If you still need to calculate velocity specifically for a UI label
+    // outside of the graph, you can add a helper function here.
 };
 
 #endif

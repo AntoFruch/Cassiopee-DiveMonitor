@@ -13,7 +13,7 @@ find_package(Qt6 REQUIRED COMPONENTS
 )
 
 find_path(LIBDC_INCLUDE_DIR
-    NAMES libdivecomputer/context.h
+    NAMES libdivecomputer
     HINTS
         ENV HOMEBREW_PREFIX
         /home/linuxbrew/.linuxbrew
