@@ -1,5 +1,11 @@
 #include "divecomputerwrapper.h"
 
+DiveComputerWrapper& DiveComputerWrapper::instance()
+{
+    static DiveComputerWrapper instance;
+    return instance;
+}
+
 DiveComputerWrapper::DiveComputerWrapper(QObject *parent) {
     qDebug() << "Creating libdivecomputer context...";
     if (dc_context_new(&context) != DC_STATUS_SUCCESS) {
@@ -9,15 +15,8 @@ DiveComputerWrapper::DiveComputerWrapper(QObject *parent) {
     qDebug() << "Context created successfully.";
 
     this->db = &DiveDatabase::instance();
-    this->divesModel = new DiveListModel(this);
-    this->samplesModel = new SampleModel(this);
-
-    connect(this, &DiveComputerWrapper::importationDone, this, [this](){
-        this->loadAllDives();
-    });
 
     this->updateSupportedDevices();
-    this->loadAllDives();
 }
 
 DiveComputerWrapper::~DiveComputerWrapper(){
@@ -417,13 +416,4 @@ void DiveComputerWrapper::importDivesAsync(){
         setImporting(false);
         emit importationDone();
     });
-}
-
-void DiveComputerWrapper::loadAllDives(){
-    divesModel->loadDives();
-}
-
-void DiveComputerWrapper::loadDiveEntries(int id){
-    samplesModel->setEntries(id);
-    emit samplesModelChanged();
 }

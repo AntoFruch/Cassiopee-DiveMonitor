@@ -56,7 +56,6 @@ ListView {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    dcWrapper.loadDiveEntries(model.id);
                     stack.push("DiveDetails.qml", {"dive": model});
                 }
             }

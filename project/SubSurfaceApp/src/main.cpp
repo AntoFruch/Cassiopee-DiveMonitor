@@ -50,9 +50,8 @@ int main(int argc, char *argv[])
     else if constexpr (QOperatingSystemVersion::currentType() == QOperatingSystemVersion::Windows)
         builtInStyles << "Windows";
 
-
-    DiveComputerWrapper wrapper;
-    engine.rootContext()->setContextProperty("dcWrapper", &wrapper);
+;
+    engine.rootContext()->setContextProperty("dcWrapper", &DiveComputerWrapper::instance());
     qmlRegisterType<SampleModel>("DiveMonitorCustom", 1, 0, "SampleModel");
     qmlRegisterType<DiveListModel>("DiveMonitorCustom", 1, 0, "DiveListModel");
 
