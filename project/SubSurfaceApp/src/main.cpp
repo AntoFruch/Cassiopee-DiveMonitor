@@ -53,7 +53,8 @@ int main(int argc, char *argv[])
 
     DiveComputerWrapper wrapper;
     engine.rootContext()->setContextProperty("dcWrapper", &wrapper);
-    qmlRegisterType<SampleModel>("DiveMonitorCustom", 1, 0, "DiveSeries");
+    qmlRegisterType<SampleModel>("DiveMonitorCustom", 1, 0, "SampleModel");
+    qmlRegisterType<DiveListModel>("DiveMonitorCustom", 1, 0, "DiveListModel");
 
     // Props à passer au QML initialement
     engine.setInitialProperties({

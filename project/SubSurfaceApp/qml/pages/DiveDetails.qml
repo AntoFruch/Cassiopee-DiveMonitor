@@ -153,7 +153,7 @@ ColumnLayout{
         }
 
         // composant custom (voir la classe C++ SampleModel)
-        DiveSeries {
+        SampleModel {
                 id: myDataSeries
                 color: accentColor
                 width: 4

@@ -25,7 +25,7 @@ public:
 
     explicit DiveListModel(QObject *parent = nullptr);
 
-    void loadDives();
+    Q_INVOKABLE void loadDives();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role) const override;
