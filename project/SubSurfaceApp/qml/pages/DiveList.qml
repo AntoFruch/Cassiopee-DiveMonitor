@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts
 import QtQuick.Controls
+import DiveMonitorCustom 1.0
 
 ListView {
     property string title: "Saved Dives"
@@ -12,7 +13,10 @@ ListView {
     bottomMargin: 80   // leave room so the + buttonn doesn't hide last item
     spacing: 0
 
-    model: dcWrapper ? dcWrapper.divesModel : null
+    model: DiveListModel {
+        id: diveListModel
+        Component.onCompleted: loadDives()
+    }
 
     delegate: Item {
         width: listView.width
