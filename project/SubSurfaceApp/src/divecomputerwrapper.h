@@ -38,8 +38,6 @@ class DiveComputerWrapper : public QObject
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(QJsonArray supportedDevices READ getSupportedDevices NOTIFY supportedDevicesChanged)
     Q_PROPERTY(QStringList availablePorts READ getAvailablePorts NOTIFY availablePortsChanged)
-    Q_PROPERTY(DiveListModel* divesModel READ getListModel NOTIFY divesModelChanged)
-    Q_PROPERTY(SampleModel* samplesModel READ getSamplesModel NOTIFY samplesModelChanged)
     Q_PROPERTY(bool isImporting READ isImporting NOTIFY isImportingChanged)
 
 public:
@@ -58,12 +56,6 @@ public:
     Q_INVOKABLE void importDives();
     Q_INVOKABLE void importDivesAsync();
 
-    Q_INVOKABLE void loadAllDives();
-    DiveListModel* getListModel() const { return divesModel; }
-
-    Q_INVOKABLE void loadDiveEntries(int id);
-    SampleModel* getSamplesModel() const { return samplesModel; }
-
     Q_INVOKABLE void refreshPorts(QString transport);
     QStringList getAvailablePorts() const { return availablePorts; }
 
@@ -79,8 +71,6 @@ signals:
     void availablePortsChanged();
     void importationDone();
     void isImportingChanged();
-    void divesModelChanged();
-    void samplesModelChanged();
 
 private:
     DiveDatabase* db;
@@ -99,8 +89,6 @@ private:
 
     QJsonArray supportedDevices;
     QStringList availablePorts;
-    DiveListModel* divesModel;
-    SampleModel* samplesModel;
 
     bool openSerial(const QString& port);
     bool findDescriptor(const std::string& vendor,
