@@ -54,14 +54,15 @@ public:
     QList<DiveEntry> getDiveEntries(int id);
 
 private:
+    // Constructeur privé et interdiction de copie.
     explicit DiveDatabase(const QString &dbPath, QObject *parent = nullptr);
+    DiveDatabase(const DiveDatabase&) = delete;
+    DiveDatabase& operator=(const DiveDatabase&) = delete;
+
 
     QString m_dbPath;
     QSqlDatabase m_db;
 
-    // interdiction de copie
-    DiveDatabase(const DiveDatabase&) = delete;
-    DiveDatabase& operator=(const DiveDatabase&) = delete;
 
     void initDatabase();
 };

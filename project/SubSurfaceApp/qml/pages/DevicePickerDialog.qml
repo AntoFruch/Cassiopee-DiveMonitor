@@ -30,17 +30,21 @@ Dialog {
 
     function applySelection() {
         deviceState.selectedBrand = pendingDeviceBrand
+        userPrefs.savedBrand = pendingDeviceBrand
         deviceState.selectedModel = pendingDeviceModel
+        userPrefs.savedModel = pendingDeviceModel
         deviceState.selectedConnectionMode = pendingConnectionMode
+        userPrefs.savedConnectionMode = pendingConnectionMode
         deviceState.selectedPort = pendingPort
+        userPrefs.savedPort = pendingPort
         close()
     }
 
     background: Rectangle {
         radius: 18
-        color: bgColor
+        color: appColors.bgColor
         border.width: 2
-        border.color: accentColor
+        border.color: appColors.accentColor
     }
 
     contentItem: Rectangle {
@@ -62,7 +66,7 @@ Dialog {
                     text: "Choose device"
                     font.pixelSize: 18
                     font.bold: true
-                    color: textColor
+                    color: appColors.textColor
                 }
             }
 
@@ -75,7 +79,7 @@ Dialog {
                 Label {
                     text: "Brand"
                     font.bold: true
-                    color: textColor
+                    color: appColors.textColor
                     Layout.fillWidth: true
                 }
 
@@ -99,7 +103,7 @@ Dialog {
                 Label {
                     text: "Device"
                     font.bold: true
-                    color: textColor
+                    color: appColors.textColor
                     Layout.fillWidth: true
                 }
 
@@ -123,7 +127,7 @@ Dialog {
                 Label {
                     text: "Connection mode"
                     font.bold: true
-                    color: textColor
+                    color: appColors.textColor
                     Layout.fillWidth: true
                 }
 
@@ -151,7 +155,7 @@ Dialog {
                 Label {
                     text: "Port"
                     font.bold: true
-                    color: textColor
+                    color: appColors.textColor
                     Layout.fillWidth: true
                 }
                 RowLayout{
@@ -212,9 +216,10 @@ Dialog {
                         text: "OK"
                         Layout.fillWidth: true
 
+
                         background: Rectangle {
                             radius: 10
-                            color: accentColor
+                            color: appColors.accentColor
                         }
 
                         contentItem: Text {

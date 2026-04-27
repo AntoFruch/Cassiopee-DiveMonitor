@@ -6,7 +6,7 @@ Rectangle {
     id: header
     Layout.fillWidth: true
     height: 70
-    color: accentColor
+    color: appColors.accentColor
 
     property var title
     property bool settingsVisible: !stack.currentItem || !stack.currentItem.hideSettingsButton
