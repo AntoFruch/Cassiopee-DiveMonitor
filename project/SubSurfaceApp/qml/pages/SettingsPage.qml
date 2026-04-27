@@ -2,218 +2,321 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-ScrollView {
+Item {
     id: root
-
     required property var deviceState
 
     property string title: "Settings"
     property bool hideSettingsButton: true
-    property var settingValues: ({
-        "language": "English",
-        "theme": Qt.styleHints.colorScheme === Qt.Dark ? "Night" : "Day",
-        "depth": "Meter (m)",
-        "pressure": "bar (bar)",
-        "temperature": "Celsius (°C)",
-        "velocity": "Meter per second (m/s)"
-    })
-    property var settingOptions: ({
-        "device": ["Mares quad Air", "Device 2", "Device 3"],
-        "language": ["English", "Francais"],
-        "theme": ["Day", "Night"],
-        "depth": ["Meter (m)", "Feet (ft)"],
-        "pressure": ["bar (bar)", "psi (psi)"],
-        "temperature": ["Celsius (°C)", "Fahrenheit (°F)"],
-        "velocity": ["Meter per second (m/s)", "Miles per hour (mph)"]
-    })
-    property string currentSettingKey: ""
-    property string popupTitle: ""
-    property var currentOptions: []
 
-    function settingValue(settingKey, fallbackValue) {
-        if (settingKey === "device")
-            return deviceState.selectedBrand ? deviceState.selectedBrand + " " + deviceState.selectedModel + " | " + deviceState.selectedConnectionMode : "No device chosen";
-
-        return settingValues[settingKey] !== undefined ? settingValues[settingKey] : fallbackValue
+    Rectangle {
+        anchors.fill: parent
+        color: appColors.bgColor
     }
 
-    function openSettingPopup(settingKey, titleText) {
-        if (settingKey === "device") {
-            devicePickerDialog.openDialog()
-            return
-        }
+    Flickable {
+        anchors.fill: parent
+        anchors.margins: 0
+        contentWidth: width
+        contentHeight: contentColumn.implicitHeight + 40
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
 
-        currentSettingKey = settingKey
-        popupTitle = titleText
-        currentOptions = settingOptions[settingKey] || []
-        settingsPopup.open()
-    }
+        Column {
+            id: contentColumn
+            width: parent.width
+            spacing: 22
 
-    function applySettingValue(value) {
-        var updatedValues = Object.assign({}, settingValues)
-        updatedValues[currentSettingKey] = value
-        settingValues = updatedValues
+            Rectangle {
+                width: parent.width
+                height: 24
+                color: "transparent"
+            }
 
-        if (currentSettingKey === "theme") {
-            Qt.styleHints.colorScheme = value === "Night" ? Qt.Dark : Qt.Light
-        }
+            Column {
+                width: parent.width - 40
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 8
 
-        settingsPopup.close()
-    }
-
-    Layout.fillWidth: true
-    Layout.fillHeight: true
-    clip: true
-
-    background: Rectangle {
-        color: bgColor
-    }
-
-    Column {
-        width: root.availableWidth
-        topPadding: 18
-        bottomPadding: 24
-
-        Repeater {
-            model: [
-                { type: "item", key: "device", label: "Set a device", popupTitle: "Choose device" },
-                { type: "item", key: "language", label: "Language", popupTitle: "Choose language" },
-                { type: "item", key: "theme", label: "Theme", popupTitle: "Choose theme" },
-                { type: "section", label: "Unity parameter" },
-                { type: "item", key: "depth", label: "Deepness/Distance", popupTitle: "Choose depth unit" },
-                { type: "item", key: "pressure", label: "Pressure", popupTitle: "Choose pressure unit" },
-                { type: "item", key: "temperature", label: "Temperature", popupTitle: "Choose temperature unit" },
-                { type: "item", key: "velocity", label: "Velocity", popupTitle: "Choose velocity unit" }
-            ]
-
-            delegate: Item {
-                width: root.availableWidth
-                height: modelData.type === "section" ? 54 : 84
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
+                Label {
+                    width: parent.width
+                    text: "Preferences"
+                    color: appColors.textColor
+                    font.pixelSize: 28
+                    font.bold: true
                 }
+
+                Label {
+                    width: parent.width
+                    text: "Personnalise l'application et configure ton appareil de plongée."
+                    color: Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.68)
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: 14
+                }
+            }
+
+            Rectangle {
+                width: parent.width - 32
+                anchors.horizontalCenter: parent.horizontalCenter
+                radius: 22
+                color: appColors.listButtonColor
+                border.width: 1
+                border.color: Qt.rgba(appColors.separatorColor.r, appColors.separatorColor.g, appColors.separatorColor.b, 0.7)
+                implicitHeight: cardContent.implicitHeight + 28
 
                 Rectangle {
                     anchors.left: parent.left
-                    anchors.right: parent.right
+                    anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    height: modelData.type === "section" ? 0 : 1
-                    color: separatorColor
+                    width: 6
+                    radius: 22
+                    color: appColors.accentColor
                 }
 
                 Column {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 16
-                    spacing: modelData.type === "section" ? 0 : 4
-
-                    Text {
-                        text: modelData.label
-                        font.pixelSize: modelData.type === "section" ? 14 : 18
-                        font.bold: true
-                        color: modelData.type === "section" ? "#F4A321" : textColor
-                    }
-
-                    Text {
-                        visible: modelData.type === "item"
-                        text: root.settingValue(modelData.key, "")
-                        font.pixelSize: 17
-                        font.bold: true
-                        color: "#A6A6A6"
-                    }
-                }
-
-                MouseArea {
+                    id: cardContent
                     anchors.fill: parent
-                    enabled: modelData.type === "item"
-                    z: 2
-                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    onClicked: {
-                        root.openSettingPopup(modelData.key, modelData.popupTitle)
+                    anchors.margins: 14
+                    anchors.leftMargin: 20
+                    spacing: 0
+
+                    Label {
+                        width: parent.width
+                        text: "General"
+                        color: Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.62)
+                        font.pixelSize: 12
+                        font.bold: true
+                        leftPadding: 4
+                        bottomPadding: 10
+                    }
+
+                    ItemDelegate {
+                        width: parent.width
+                        height: 86
+                        leftPadding: 4
+                        rightPadding: 8
+                        topPadding: 12
+                        bottomPadding: 12
+                        background: Rectangle {
+                            color: "transparent"
+                            radius: 16
+                        }
+                        onClicked: devicePickerDialog.openDialog()
+
+                        contentItem: RowLayout {
+                            spacing: 12
+
+                            Rectangle {
+                                Layout.preferredWidth: 42
+                                Layout.preferredHeight: 42
+                                radius: 14
+                                color: Qt.rgba(appColors.accentColor.r, appColors.accentColor.g, appColors.accentColor.b, 0.14)
+
+                                Label {
+                                    anchors.centerIn: parent
+                                    text: "DC"
+                                    color: appColors.accentColor
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 3
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    text: "Dive computer"
+                                    color: appColors.textColor
+                                    font.pixelSize: 17
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Label {
+                                    Layout.fillWidth: true
+                                    text: deviceState.selectedModel
+                                          ? deviceState.selectedBrand + " - " + deviceState.selectedModel
+                                          : "Choisir un appareil"
+                                    color: deviceState.selectedModel
+                                           ? Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.76)
+                                           : appColors.accentColor
+                                    font.pixelSize: 14
+                                    elide: Text.ElideRight
+                                }
+                            }
+
+                            Label {
+                                text: ">"
+                                color: Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.45)
+                                font.pixelSize: 20
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: Qt.rgba(appColors.separatorColor.r, appColors.separatorColor.g, appColors.separatorColor.b, 0.55)
+                    }
+
+                    Item {
+                        width: parent.width
+                        height: 94
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 4
+                            anchors.rightMargin: 4
+                            anchors.topMargin: 12
+                            anchors.bottomMargin: 8
+                            spacing: 10
+
+                            Label {
+                                Layout.fillWidth: true
+                                text: "Theme"
+                                color: appColors.textColor
+                                font.pixelSize: 17
+                                font.bold: true
+                            }
+
+                            ComboBox {
+                                id: themeComboBox
+                                Layout.fillWidth: true
+                                implicitHeight: 44
+                                model: ["System", "Light", "Dark"]
+                                currentIndex: userPrefs.theme === Qt.Light ? 1 : (userPrefs.theme === Qt.Dark ? 2 : 0)
+
+                                onActivated: function(index) {
+                                    if (index === 0) {
+                                        userPrefs.theme = Qt.Unknown
+                                        Qt.styleHints.colorScheme = Qt.Unknown
+                                    } else if (index === 1) {
+                                        userPrefs.theme = Qt.Light
+                                        Qt.styleHints.colorScheme = Qt.Light
+                                    } else {
+                                        userPrefs.theme = Qt.Dark
+                                        Qt.styleHints.colorScheme = Qt.Dark
+                                    }
+                                }
+
+                                contentItem: Text {
+                                    leftPadding: 14
+                                    rightPadding: 36
+                                    text: themeComboBox.displayText
+                                    font.pixelSize: 14
+                                    color: appColors.textColor
+                                    verticalAlignment: Text.AlignVCenter
+                                    elide: Text.ElideRight
+                                }
+
+                                indicator: Canvas {
+                                    id: themeIndicator
+                                    x: themeComboBox.width - width - 14
+                                    y: themeComboBox.topPadding + (themeComboBox.availableHeight - height) / 2
+                                    width: 12
+                                    height: 8
+                                    contextType: "2d"
+
+                                    Connections {
+                                        target: themeComboBox
+                                        function onPressedChanged() { themeIndicator.requestPaint() }
+                                    }
+
+                                    onPaint: {
+                                        context.reset()
+                                        context.moveTo(0, 0)
+                                        context.lineTo(width, 0)
+                                        context.lineTo(width / 2, height)
+                                        context.closePath()
+                                        context.fillStyle = appColors.accentColor
+                                        context.fill()
+                                    }
+                                }
+
+                                background: Rectangle {
+                                    radius: 14
+                                    color: appColors.bgColor
+                                    border.width: 1
+                                    border.color: themeComboBox.popup.visible
+                                                  ? appColors.accentColor
+                                                  : Qt.rgba(appColors.separatorColor.r, appColors.separatorColor.g, appColors.separatorColor.b, 0.85)
+                                }
+
+                                popup: Popup {
+                                    y: themeComboBox.height + 6
+                                    width: themeComboBox.width
+                                    padding: 6
+
+                                    contentItem: ListView {
+                                        clip: true
+                                        implicitHeight: contentHeight
+                                        model: themeComboBox.popup.visible ? themeComboBox.delegateModel : null
+                                        currentIndex: themeComboBox.highlightedIndex
+                                    }
+
+                                    background: Rectangle {
+                                        radius: 16
+                                        color: appColors.bgColor
+                                        border.width: 1
+                                        border.color: Qt.rgba(appColors.separatorColor.r, appColors.separatorColor.g, appColors.separatorColor.b, 0.9)
+                                    }
+                                }
+
+                                delegate: ItemDelegate {
+                                    id: themeDelegate
+                                    width: themeComboBox.width - 12
+                                    height: 42
+                                    text: modelData
+                                    highlighted: themeComboBox.highlightedIndex === index
+
+                                    background: Rectangle {
+                                        radius: 12
+                                        color: themeDelegate.highlighted
+                                               ? Qt.rgba(appColors.accentColor.r, appColors.accentColor.g, appColors.accentColor.b, 0.12)
+                                               : "transparent"
+                                    }
+
+                                    contentItem: Text {
+                                        text: modelData
+                                        color: appColors.textColor
+                                        font.pixelSize: 14
+                                        verticalAlignment: Text.AlignVCenter
+                                        leftPadding: 10
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
-    }
-
-    Popup {
-        id: settingsPopup
-        parent: Overlay.overlay
-        x: Math.round((root.width - width) / 2)
-        y: 150
-        width: Math.min(root.width - 32, 260)
-        modal: true
-        focus: true
-        padding: 0
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-
-        background: Rectangle {
-            radius: 18
-            color: "#F7F7F7"
-            border.width: 2
-            border.color: accentColor
-        }
-
-        contentItem: Column {
-            spacing: 0
-            clip: true
 
             Rectangle {
-                width: settingsPopup.availableWidth
-                height: 54
+                width: parent.width - 40
+                anchors.horizontalCenter: parent.horizontalCenter
                 color: "transparent"
+                implicitHeight: helperContent.implicitHeight
 
-                Text {
-                    anchors.centerIn: parent
-                    text: root.popupTitle
-                    font.pixelSize: 18
-                    font.bold: true
-                    color: textColor
-                }
-            }
+                Column {
+                    id: helperContent
+                    width: parent.width
+                    spacing: 6
 
-            Repeater {
-                model: root.currentOptions
-
-                delegate: ItemDelegate {
-                    width: settingsPopup.availableWidth
-                    height: 48
-                    text: modelData
-                    font.pixelSize: 16
-                    font.bold: root.settingValue(root.currentSettingKey, "") === modelData
-                    leftPadding: 18
-                    rightPadding: 18
-
-                    background: Rectangle {
-                        radius: 12
-                        color: "transparent"
-
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.leftMargin: 8
-                            anchors.rightMargin: 8
-                            anchors.topMargin: 3
-                            anchors.bottomMargin: 3
-                            radius: 10
-                            color: highlighted || root.settingValue(root.currentSettingKey, "") === modelData ? "#E8EEFF" : "transparent"
-                        }
-
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            height: 1
-                            visible: index < root.currentOptions.length - 1
-                            color: "#D8D8D8"
-                        }
+                    Label {
+                        text: "Tip"
+                        color: appColors.accentColor
+                        font.pixelSize: 12
+                        font.bold: true
                     }
 
-                    onClicked: {
-                        root.applySettingValue(modelData)
+                    Label {
+                        width: parent.width
+                        text: "Le thème est appliqué immédiatement, et le choix de l'appareil sert aux futures connexions."
+                        color: Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.6)
+                        wrapMode: Text.WordWrap
+                        font.pixelSize: 13
                     }
                 }
             }
