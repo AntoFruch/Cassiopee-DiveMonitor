@@ -226,7 +226,7 @@ QList<DiveData> DiveDatabase::getAllDives(){
     QSqlQuery query(m_db);
 
     query.prepare(
-        "SELECT * FROM dives"
+        "SELECT * FROM dives ORDER BY date_time DESC"
         );
 
     if (!query.exec()) {
@@ -265,7 +265,7 @@ QList<DiveEntry> DiveDatabase::getDiveEntries(int id){
     qDebug() << "selecting dive" << id;
 
     query.prepare(
-        "SELECT * FROM dive_entries WHERE dive_id=:id"
+        "SELECT * FROM dive_entries WHERE dive_id=:id ORDER BY time ASC"
         );
 
     query.bindValue(":id", id);
