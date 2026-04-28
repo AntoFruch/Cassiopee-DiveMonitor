@@ -55,6 +55,12 @@ ColumnLayout {
             readonly property real yTickReservedWidth: 20
             readonly property real yLegendToTickGap: 10
             readonly property real yLegendReservedWidth: 10
+            // Bornes "de base" du graphe : on ne veut jamais dézoomer plus loin
+            // que cette fenêtre complète de la plongée.
+            readonly property real baseXMin: 0
+            readonly property real baseXMax: Math.max(1, dive.diveTime)
+            readonly property real baseYMin: -Math.max(1, dive.maxDepth)
+            readonly property real baseYMax: 0
 
             // Synchronise le mode affiché côté QML et côté série C++.
             function setDisplayMode(mode) {
@@ -170,6 +176,45 @@ ColumnLayout {
                 return ticks
             }
 
+            // Ramène une fenêtre [currentMin, currentMax] dans ses bornes autorisées.
+            // - on interdit un dézoom plus grand que la fenêtre de base
+            // - on interdit un pan hors des bornes de la plongée
+            function clampAxisRange(currentMin, currentMax, boundMin, boundMax) {
+                const maxRange = boundMax - boundMin
+                let minValue = currentMin
+                let maxValue = currentMax
+                let currentRange = maxValue - minValue
+
+                if (currentRange >= maxRange)
+                    return { min: boundMin, max: boundMax }
+
+                if (minValue < boundMin) {
+                    const shift = boundMin - minValue
+                    minValue += shift
+                    maxValue += shift
+                }
+
+                if (maxValue > boundMax) {
+                    const shift = maxValue - boundMax
+                    minValue -= shift
+                    maxValue -= shift
+                }
+
+                return { min: minValue, max: maxValue }
+            }
+
+            // Applique un nouveau cadrage au graphe en le clampant dans les bornes
+            // de la plongée, aussi bien en X qu'en Y.
+            function setClampedView(xMin, xMax, yMin, yMax) {
+                const clampedX = clampAxisRange(xMin, xMax, baseXMin, baseXMax)
+                const clampedY = clampAxisRange(yMin, yMax, baseYMin, baseYMax)
+
+                axisX.min = clampedX.min
+                axisX.max = clampedX.max
+                axisY.min = clampedY.min
+                axisY.max = clampedY.max
+            }
+
             // Demande un recalcul différé de la grille pour éviter de recalculer
             // plusieurs fois de suite pendant un drag ou un pinch.
             function scheduleGridUpdate() {
@@ -229,8 +274,8 @@ ColumnLayout {
             // Axe horizontal du temps.
             axisX: ValueAxis {
                 id: axisX
-                min: 0
-                max: Math.max(1, dive.diveTime)
+                min: graph.baseXMin
+                max: graph.baseXMax
                 tickAnchor: 0
                 tickInterval: 60
                 subTickCount: 3
@@ -244,8 +289,8 @@ ColumnLayout {
             axisY: ValueAxis {
                 id: axisY
                 // La série profondeur est tracée en négatif pour que la courbe descende.
-                min: -Math.max(1, dive.maxDepth)
-                max: 0
+                min: graph.baseYMin
+                max: graph.baseYMax
                 tickAnchor: 0
                 tickInterval: 5
                 subTickCount: 4
@@ -278,10 +323,12 @@ ColumnLayout {
                     const dxAxis = dxPixels * (axisX.max - axisX.min) / parent.width
                     const dyAxis = dyPixels * (axisY.max - axisY.min) / parent.height
 
-                    axisX.min -= dxAxis
-                    axisX.max -= dxAxis
-                    axisY.min += dyAxis
-                    axisY.max += dyAxis
+                    graph.setClampedView(
+                        axisX.min - dxAxis,
+                        axisX.max - dxAxis,
+                        axisY.min + dyAxis,
+                        axisY.max + dyAxis
+                    )
 
                     lastPoint = centroid.position
                 }
@@ -313,10 +360,15 @@ ColumnLayout {
                     const xFactor = (centroid.position.x - pinchHandler.parent.x) / pinchHandler.parent.width
                     const yFactor = 1.0 - (centroid.position.y - pinchHandler.parent.y) / pinchHandler.parent.height
 
-                    axisX.min = axisX.min + (currentXRange - newXRange) * xFactor
-                    axisX.max = axisX.min + newXRange
-                    axisY.min = axisY.min + (currentYRange - newYRange) * yFactor
-                    axisY.max = axisY.min + newYRange
+                    const nextXMin = axisX.min + (currentXRange - newXRange) * xFactor
+                    const nextYMin = axisY.min + (currentYRange - newYRange) * yFactor
+
+                    graph.setClampedView(
+                        nextXMin,
+                        nextXMin + newXRange,
+                        nextYMin,
+                        nextYMin + newYRange
+                    )
 
                     lastScale = activeScale
                 }
@@ -328,10 +380,12 @@ ColumnLayout {
                     const dx = (centroid.position.x - lastCentroid.x) * (axisX.max - axisX.min) / pinchHandler.parent.width
                     const dy = (centroid.position.y - lastCentroid.y) * (axisY.max - axisY.min) / pinchHandler.parent.height
 
-                    axisX.min -= dx
-                    axisX.max -= dx
-                    axisY.min += dy
-                    axisY.max += dy
+                    graph.setClampedView(
+                        axisX.min - dx,
+                        axisX.max - dx,
+                        axisY.min + dy,
+                        axisY.max + dy
+                    )
 
                     lastCentroid = centroid.position
                 }
