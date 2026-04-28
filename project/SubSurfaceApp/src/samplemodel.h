@@ -18,6 +18,8 @@ enum DisplayMode{
  */
 class SampleModel : public QLineSeries {
     Q_OBJECT
+    Q_PROPERTY(qreal displayMin READ displayMin NOTIFY displayRangeChanged)
+    Q_PROPERTY(qreal displayMax READ displayMax NOTIFY displayRangeChanged)
 public:
     explicit SampleModel(QObject *parent = nullptr) : QLineSeries(parent), m_currentMode(DEPTH) {} //pour bien initialiser current_mode
 
@@ -34,9 +36,19 @@ public:
      */
     Q_INVOKABLE void setDisplayMode(DisplayMode mode);
 
+    qreal displayMin() const { return m_displayMin; }
+    qreal displayMax() const { return m_displayMax; }
+
+signals:
+    void displayRangeChanged();
+
 private:
+    void updateDisplayRange(const QList<QPointF> &points);
+
     DisplayMode m_currentMode;
     QList<DiveEntry> m_rawEntries;
+    qreal m_displayMin = -1.0;
+    qreal m_displayMax = 0.0;
 
 
     void updateSeries();
