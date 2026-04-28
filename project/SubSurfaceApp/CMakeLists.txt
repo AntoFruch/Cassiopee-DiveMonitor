@@ -90,6 +90,11 @@ qt_add_qml_module(appSubSurfaceApp
         src/divelistmodel.cpp
         src/samplemodel.h
         src/samplemodel.cpp
+        RESOURCES android/src/org/subsurfacedivelog/mobile/SubsurfaceMobileActivity.java
+        RESOURCES android/src/org/subsurfacedivelog/mobile/AndroidSerial.java
+        SOURCES src/serial_usb_android.cpp
+        SOURCES src/serial_usb_android.h
+        SOURCES src/libdivecomputer.h
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -101,6 +106,7 @@ set_target_properties(appSubSurfaceApp PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+    QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
 )
 
 target_link_libraries(appSubSurfaceApp PRIVATE
@@ -117,6 +123,7 @@ if(ANDROID)
     set_property(TARGET appSubSurfaceApp APPEND PROPERTY
         QT_ANDROID_EXTRA_LIBS ${LIBDC}
     )
+    set_property(TARGET appSubSurfaceApp PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
 endif()
 
 

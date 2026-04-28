@@ -31,6 +31,10 @@
 #include "divelistmodel.h"
 #include "samplemodel.h"
 
+#ifdef Q_OS_ANDROID
+#include "serial_usb_android.h"
+#endif
+
 /** Wrapper de libDiveComputer, construction par DiveComputerWrapper::instance() (Singleton)
  */
 class DiveComputerWrapper : public QObject
@@ -165,6 +169,11 @@ private:
     /** Importe les plongées présentes dans l'appareil actuellement connecté et les insère en base
      */
     void importDives();
+
+#ifdef Q_OS_ANDROID
+    // On stocke les objets complets pour pouvoir les passer à serial_usb_android_open plus tard
+    std::vector<android_usb_serial_device_descriptor> detectedDevices;
+#endif
 };
 
 #endif // DIVECOMPUTERWRAPPER_H

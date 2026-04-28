@@ -1,5 +1,18 @@
 #include "divecomputerwrapper.h"
 
+extern "C" {
+    JNIEXPORT void JNICALL Java_org_subsurfacedivelog_mobile_SubsurfaceMobileActivity_setUsbDevice(JNIEnv *env, jclass clazz, jobject device) {
+        // Optionnel : stocker le device détecté
+        qDebug() << "USB Device détecté par le système !";
+    }
+
+    JNIEXPORT void JNICALL Java_org_subsurfacedivelog_mobile_SubsurfaceMobileActivity_restartDownload(JNIEnv *env, jclass clazz, jobject device) {
+        // C'est ici que tu déclenches l'ouverture du port
+        // car on sait que la permission a été accordée.
+        qDebug() << "Permission accordée, prêt à ouvrir le flux.";
+    }
+}
+
 DiveComputerWrapper& DiveComputerWrapper::instance()
 {
     static DiveComputerWrapper instance;
@@ -44,6 +57,8 @@ bool DiveComputerWrapper::connectToDevice(const QString& vendor, const QString& 
     return true;
 }
 
+
+
 void DiveComputerWrapper::disconnectDevice(){
     if (!device) {
         qDebug() << "Disconnect ignored: No device handle exists.";
@@ -81,12 +96,26 @@ dc_transport_t transportStringtoEnum(const QString& transport) {
 void DiveComputerWrapper::refreshPorts(QString transport) {
     dc_transport_t transport_mode = transportStringtoEnum(transport);
 
-    dc_iterator_t* iter = nullptr; // Toujours initialiser à nullptr
-    const char* (*get_name)(void*) = nullptr;
-    void (*device_free)(void*) = nullptr;
 
     // On vide la liste actuelle avant de rafraîchir
     availablePorts.clear();
+
+#ifdef Q_OS_ANDROID
+    if (transport_mode == DC_TRANSPORT_SERIAL) {
+        // On utilise la fonction JNI pour scanner l'USB
+        detectedDevices = serial_usb_android_get_devices();
+        for (const auto& dev : detectedDevices) {
+            availablePorts.append(QString::fromStdString(dev.uiRepresentation));
+        }
+        emit availablePortsChanged();
+        return;
+    }
+#endif
+
+    dc_iterator_t* iter = nullptr; // Toujours initialiser à nullptr
+
+    const char* (*get_name)(void*) = nullptr;
+    void (*device_free)(void*) = nullptr;
 
     switch (transport_mode) {
     case DC_TRANSPORT_SERIAL:
@@ -125,14 +154,42 @@ void DiveComputerWrapper::refreshPorts(QString transport) {
     emit availablePortsChanged();
 }
 
-bool DiveComputerWrapper::openSerial(const QString& port)
-{
-    if (dc_serial_open(&iostream, context, port.toUtf8().data()) == DC_STATUS_SUCCESS) {
-        qDebug() << "Serial device opened sucessfully";
+bool DiveComputerWrapper::openSerial(const QString& port) {
+#ifdef Q_OS_ANDROID
+    // Sur Android, 'port' est le nom (uiRepresentation) du device choisi dans la liste
+    // On doit retrouver le descripteur USB correspondant
+
+    // 'detectedDevices' doit être un membre de ta classe rempli par refreshPorts()
+    android_usb_serial_device_descriptor* selectedDev = nullptr;
+    for (auto& dev : detectedDevices) {
+        if (QString::fromStdString(dev.uiRepresentation) == port) {
+            selectedDev = &dev;
+            break;
+        }
+    }
+
+    if (!selectedDev) {
+        qDebug() << "Android: Aucun périphérique USB correspondant à" << port;
+        return false;
+    }
+
+    // On utilise la fonction de Subsurface pour créer l'iostream CUSTOM
+    if (serial_usb_android_open(&iostream, context, selectedDev) == DC_STATUS_SUCCESS) {
+        qDebug() << "Android: Flux Custom IO ouvert avec succès";
         return true;
     }
-    qDebug() << "Failed to Open serial device" << port;
+
+    qDebug() << "Android: Échec de serial_usb_android_open";
     return false;
+
+#else
+    // Logique standard pour Windows/Mac/Linux
+    if (dc_serial_open(&iostream, context, port.toUtf8().data()) == DC_STATUS_SUCCESS) {
+        qDebug() << "Desktop: Port série ouvert sucessfully";
+        return true;
+    }
+    return false;
+#endif
 }
 
 bool DiveComputerWrapper::findDescriptor(const std::string& vendor,
