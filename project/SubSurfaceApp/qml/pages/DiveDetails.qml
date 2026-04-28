@@ -29,7 +29,7 @@ ColumnLayout {
 
         Text {
             text: "Ordonnée :"
-            color: textColor
+            color: appColors.textColor
         }
 
         ComboBox {
@@ -311,7 +311,7 @@ ColumnLayout {
                 readonly property color c2: "#333333"
                 readonly property color c3: Qt.lighter(c2, 2)
 
-                colorScheme: bgColor.toString()
+                colorScheme: appColors.bgColor.toString()
                 grid.mainColor: c3
                 grid.subColor: c2
                 axisX.mainColor: c3
@@ -445,7 +445,7 @@ ColumnLayout {
             // Série C++ qui alimente le graphe en points.
             SampleModel {
                 id: myDataSeries
-                color: accentColor
+                color: appColors.accentColor
                 width: 4
             }
 
