@@ -5,7 +5,7 @@ Rectangle {
     width: 60
     height: 60
     radius: 30
-    color: accentColor
+    color: appColors.accentColor
     anchors {
         horizontalCenter: parent.horizontalCenter
         bottom: parent.bottom

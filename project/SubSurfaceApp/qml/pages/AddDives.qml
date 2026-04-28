@@ -13,7 +13,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: bgColor
+        color: appColors.bgColor
     }
 
     Rectangle {
@@ -23,9 +23,9 @@ Item {
         anchors.top: parent.top
         anchors.topMargin: 110
         radius: 24
-        color: bgColor
+        color: appColors.bgColor
         border.width: 3
-        border.color: accentColor
+        border.color: appColors.accentColor
 
         ColumnLayout {
             anchors.fill: parent
@@ -36,7 +36,7 @@ Item {
                 text: "Import Dives"
                 font.pixelSize: 22
                 font.bold: true
-                color: accentColor
+                color: appColors.accentColor
                 horizontalAlignment: Text.AlignHCenter
                 Layout.fillWidth: true
             }
@@ -45,7 +45,7 @@ Item {
                 text: "your current device :"
                 font.pixelSize: 14
                 font.bold: true
-                color: textColor
+                color: appColors.textColor
                 Layout.fillWidth: true
             }
 
@@ -53,7 +53,7 @@ Item {
                 text: deviceState.selectedBrand  ? deviceState.selectedBrand + " " + deviceState.selectedModel : "No Device chosen, choose one";
                 font.pixelSize: 22
                 font.bold: true
-                color: textColor
+                color: appColors.textColor
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
             }
@@ -72,7 +72,7 @@ Item {
                 Label {
                     text: deviceState.isDeviceConnected ? "Device connected" : "Device not connected"
                     font.pixelSize: 14
-                    color: textColor
+                    color: appColors.textColor
                     Layout.fillWidth: true
                 }
             }
@@ -124,12 +124,12 @@ Item {
                     radius: 14
                     color: "transparent"
                     border.width: 2
-                    border.color: accentColor
+                    border.color: appColors.accentColor
                 }
 
                 contentItem: Text {
                     text: parent.text
-                    color: accentColor
+                    color: appColors.accentColor
                     font.pixelSize: 14
                     font.bold: true
                     horizontalAlignment: Text.AlignHCenter
@@ -153,7 +153,7 @@ Item {
 
                 background: Rectangle {
                     radius: 16
-                    color: parent.enabled ? accentColor : "#95a5a6"
+                    color: parent.enabled ? appColors.accentColor : "#95a5a6"
                 }
 
                 contentItem: Text {
