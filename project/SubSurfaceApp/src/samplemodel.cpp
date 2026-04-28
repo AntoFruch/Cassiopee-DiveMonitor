@@ -28,7 +28,8 @@ void SampleModel::updateSeries() {
                 y = QVariant(e.temperature).toDouble();
                 break;
             case DEPTH:
-                y = QVariant(e.depth).toDouble();
+                // Depth est inversé pour que la surface soit vers le haut
+                y = -QVariant(e.depth).toDouble();
                 break;
             case SPEED:
                 break;

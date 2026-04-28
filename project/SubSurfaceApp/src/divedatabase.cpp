@@ -265,7 +265,7 @@ QList<DiveEntry> DiveDatabase::getDiveEntries(int id){
     qDebug() << "selecting dive" << id;
 
     query.prepare(
-        "SELECT * FROM dive_entries WHERE dive_id=:id"
+        "SELECT * FROM dive_entries WHERE dive_id=:id ORDER BY time ASC" // pour avoir les points dans le bon ordre temporel
         );
 
     query.bindValue(":id", id);

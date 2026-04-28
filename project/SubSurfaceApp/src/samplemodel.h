@@ -15,7 +15,7 @@ enum DisplayMode{
 class SampleModel : public QLineSeries {
     Q_OBJECT
 public:
-    explicit SampleModel(QObject *parent = nullptr) : QLineSeries(parent) {}
+    explicit SampleModel(QObject *parent = nullptr) : QLineSeries(parent), m_currentMode(DEPTH) {} //pour bien initialiser current_mode
 
     // Method to populate the series with data
     Q_INVOKABLE void setEntries(const int diveId);

@@ -20,6 +20,109 @@ ColumnLayout{
         Layout.alignment: Qt.AlignTop   //alignement haut
 
         height: parent.height * 0.5     // moitié de la hauteur du parent
+        readonly property real targetMajorTickPxX: 100
+        readonly property real targetMajorTickPxY: 80
+        property bool gridUpdatePending: false
+
+        function pickTimeStep(rawStep) {
+            const safeRawStep = Math.max(1, rawStep)
+            const steps = [5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200]
+
+            for (let i = 0; i < steps.length; ++i) {
+                if (safeRawStep <= steps[i])
+                    return steps[i]
+            }
+
+            return Math.ceil(safeRawStep / 3600) * 3600
+        }
+
+        function pickMetricStep(rawStep) {
+            const safeRawStep = Math.max(1, rawStep)
+            const power = Math.pow(10, Math.floor(Math.log10(safeRawStep)))
+            const normalized = safeRawStep / power
+
+            if (normalized <= 1)
+                return 1 * power
+            if (normalized <= 2)
+                return 2 * power
+            if (normalized <= 5)
+                return 5 * power
+
+            return 10 * power
+        }
+
+        function pickTimeSubTickCount(step) {
+            switch (step) {
+            case 10:
+                return 1
+            case 15:
+            case 30:
+                return 2
+            case 60:
+            case 120:
+                return 3
+            case 300:
+            case 600:
+                return 4
+            case 900:
+            case 1800:
+                return 2
+            case 3600:
+                return 5
+            default:
+                return 0
+            }
+        }
+
+        function pickMetricSubTickCount(step) {
+            switch (step) {
+            case 2:
+                return 1
+            case 5:
+            case 10:
+            case 50:
+            case 100:
+                return 4
+            case 20:
+                return 3
+            default:
+                return 0
+            }
+        }
+
+        function scheduleGridUpdate() {
+            if (gridUpdatePending)
+                return
+
+            gridUpdatePending = true
+            Qt.callLater(function() {
+                gridUpdatePending = false
+                updateGrid()
+            })
+        }
+
+        function updateGrid() {
+            if (graph.width <= 0 || graph.height <= 0)
+                return
+
+            const xRange = Math.max(1, axisX.max - axisX.min)
+            const yRange = Math.max(1, axisY.max - axisY.min)
+            const targetXTickCount = Math.max(2, graph.width / targetMajorTickPxX)
+            const targetYTickCount = Math.max(2, graph.height / targetMajorTickPxY)
+            const xStep = pickTimeStep(xRange / targetXTickCount)
+            const yStep = pickMetricStep(yRange / targetYTickCount)
+
+            axisX.tickAnchor = 0
+            axisY.tickAnchor = 0
+            axisX.tickInterval = xStep
+            axisY.tickInterval = yStep
+            axisX.subTickCount = pickTimeSubTickCount(xStep)
+            axisY.subTickCount = pickMetricSubTickCount(yStep)
+        }
+
+        onWidthChanged: scheduleGridUpdate()
+        onHeightChanged: scheduleGridUpdate()
+
         theme: GraphsTheme {
             // Ici c'est que pour jouer sur l'aspect visuel du graphe,couleur etc, checker les propriete de GraphsTheme pour voir ce qu'on peut faire.
             readonly property color c1: "#AAAAAA"
@@ -40,19 +143,43 @@ ColumnLayout{
         // axe X
         axisX: ValueAxis {
             id: axisX
-            max: 600
+            min: 0
+            max: Math.max(1, dive.diveTime)
+            tickAnchor: 0
             tickInterval: 60
-            subTickCount: 5
+            subTickCount: 3
             labelDecimals: 0
+            onRangeChanged: graph.scheduleGridUpdate()
 
         }
         // Axe Y
         axisY: ValueAxis {
             id: axisY
-            max: dive.maxDepth
+            // 0 m en haut, profondeur max en bas via des valeurs Y negatives.
+            min: -Math.max(1, dive.maxDepth)
+            max: 0
+            tickAnchor: 0
             tickInterval: 5
             subTickCount: 4
-            labelDecimals: 1
+            labelDecimals: 0
+            onRangeChanged: graph.scheduleGridUpdate()
+            labelDelegate: Item {
+                property string text: ""
+
+                width: label.implicitWidth
+                height: label.implicitHeight
+
+                Text {
+                    id: label
+                    text: {
+                        const value = Number(parent.text)
+                        return Number.isFinite(value)
+                            ? Math.abs(value).toFixed(axisY.labelDecimals)
+                            : parent.text
+                    }
+                    color: "#AAAAAA"
+                }
+            }
         }
 
         // pour se deplacer dans le graphe ( Généré par Gemini)
@@ -160,7 +287,9 @@ ColumnLayout{
             }
 
             Component.onCompleted: {
-                myDataSeries.setEntries(dive.id);
+                myDataSeries.setDisplayMode(0) // DEPTH
+                myDataSeries.setEntries(dive.id)
+                graph.scheduleGridUpdate()
             }
     }
 }
