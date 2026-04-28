@@ -1,6 +1,7 @@
 import QtQuick
 import QtGraphs
 import QtQuick.Layouts
+import QtQuick.Controls 2.15
 import DiveMonitorCustom 1.0
 
 ColumnLayout {
@@ -12,6 +13,36 @@ ColumnLayout {
     // Les points ne sont pas embarqués dans cet objet pour éviter de l'alourdir.
     required property var dive
     property string title: dive.date
+    readonly property var yModeOptions: [
+        { label: "Profondeur", mode: 0 },
+        { label: "Vitesse", mode: 1 },
+        { label: "Temperature", mode: 2 }
+    ]
+
+    // Le sélecteur de grandeur est placé au-dessus du graphe pour ne pas
+    // perturber la géométrie du GraphsView ni le positionnement des légendes.
+    RowLayout {
+        id: yModeSelector
+
+        Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+        spacing: 10
+
+        Text {
+            text: "Ordonnée :"
+            color: textColor
+        }
+
+        ComboBox {
+            id: yModeComboBox
+            model: root.yModeOptions
+            textRole: "label"
+            currentIndex: 0
+
+            onActivated: function(index) {
+                graph.setDisplayMode(root.yModeOptions[index].mode)
+            }
+        }
+    }
 
     // Cette zone contient le graphe QtGraphs et les éléments QML dessinés autour
     // (légendes et labels Y personnalisés).
@@ -20,7 +51,7 @@ ColumnLayout {
 
         Layout.fillWidth: true
         Layout.alignment: Qt.AlignTop
-        height: parent.height * 0.5
+        Layout.preferredHeight: parent.height * 0.5
 
         // GraphsView gère le rendu du graphe, des axes, de la grille et des gestes.
         GraphsView {
@@ -59,13 +90,15 @@ ColumnLayout {
             // que cette fenêtre complète de la plongée.
             readonly property real baseXMin: 0
             readonly property real baseXMax: Math.max(1, dive.diveTime)
-            readonly property real baseYMin: -Math.max(1, dive.maxDepth)
-            readonly property real baseYMax: 0
+            readonly property real baseYMin: myDataSeries.displayMin
+            readonly property real baseYMax: myDataSeries.displayMax
 
             // Synchronise le mode affiché côté QML et côté série C++.
             function setDisplayMode(mode) {
                 currentDisplayMode = mode
                 myDataSeries.setDisplayMode(mode)
+                setClampedView(baseXMin, baseXMax, baseYMin, baseYMax)
+                scheduleGridUpdate()
             }
 
             // Texte de la légende verticale de l'axe Y selon la grandeur affichée.
@@ -74,17 +107,35 @@ ColumnLayout {
                 case displayTemperature:
                     return "Temperature (°C)"
                 case displaySpeed:
-                    return "Vitesse"
+                    return "Vitesse (m/min)"
                 case displayDepth:
                 default:
                     return "Profondeur (m)"
                 }
             }
 
+            function yAxisLabelDecimals() {
+                switch (currentDisplayMode) {
+                case displayTemperature:
+                case displaySpeed:
+                    return 1
+                case displayDepth:
+                default:
+                    return 0
+                }
+            }
+
             // Les profondeurs sont tracées en négatif pour faire "descendre" la
-            // courbe. Ici, on reformate la valeur pour l'afficher positivement.
+            // courbe. Ici, on reformate la valeur selon la grandeur affichée.
             function formatYAxisValue(value) {
-                return Math.abs(value).toFixed(axisY.labelDecimals)
+                switch (currentDisplayMode) {
+                case displayTemperature:
+                case displaySpeed:
+                    return Number(value).toFixed(axisY.labelDecimals)
+                case displayDepth:
+                default:
+                    return Math.abs(value).toFixed(axisY.labelDecimals)
+                }
             }
 
             // Choisit un pas de temps "propre" pour la grille :
@@ -294,7 +345,7 @@ ColumnLayout {
                 tickAnchor: 0
                 tickInterval: 5
                 subTickCount: 4
-                labelDecimals: 0
+                labelDecimals: graph.yAxisLabelDecimals()
                 // Les labels natifs sont masqués car on veut un contrôle plus fin
                 // de leur position et de leur format.
                 labelsVisible: false
@@ -405,6 +456,7 @@ ColumnLayout {
             Component.onCompleted: {
                 graph.setDisplayMode(graph.displayDepth)
                 myDataSeries.setEntries(dive.id)
+                graph.setClampedView(graph.baseXMin, graph.baseXMax, graph.baseYMin, graph.baseYMax)
                 graph.scheduleGridUpdate()
             }
         }
@@ -448,7 +500,8 @@ ColumnLayout {
 
             // Légende de l'axe X.
             Text {
-                anchors.horizontalCenter: parent.horizontalCenter
+                id: xAxisLegend
+                x: graph.plotArea.x + (graph.plotArea.width - width) / 2
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 4
                 text: "Temps (s)"
@@ -487,5 +540,6 @@ ColumnLayout {
                 }
             }
         }
+
     }
 }
