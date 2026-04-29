@@ -13,6 +13,14 @@ ApplicationWindow {
     height: 750
     title: "Subsurface"
 
+    readonly property bool darkMode: appColors.darkMode
+    readonly property color bgColor: appColors.bgColor
+    readonly property color textColor: appColors.textColor
+    readonly property color listButtonColor: appColors.listButtonColor
+    readonly property color separatorColor: appColors.separatorColor
+    readonly property color accentColor: appColors.accentColor
+    readonly property bool hideHeaderForCurrentPage: !!stack.currentItem && !!stack.currentItem.hideHeader
+
     Settings {
         id: userPrefs
         property var theme: Qt.Unknown
@@ -32,12 +40,12 @@ ApplicationWindow {
                                          ? Qt.styleHints.colorScheme === Qt.Dark
                                          : userPrefs.theme === Qt.Dark
 
-    readonly property color bgColor : darkMode ? "#000000" : "#FFFFFF"
-    readonly property color textColor : darkMode ? "#FFFFFF" : "#000000"
-    readonly property color listButtonColor : darkMode ?  "#333333" : "#eeeeee"
-    readonly property color separatorColor : darkMode ? "#1C1C1C" : "#CCCCCC"
-    readonly property color accentColor: "#1981BD"
-    readonly property bool hideHeaderForCurrentPage: !!stack.currentItem && !!stack.currentItem.hideHeader
+        readonly property color bgColor: darkMode ? "#000000" : "#FFFFFF"
+        readonly property color textColor: darkMode ? "#FFFFFF" : "#000000"
+        readonly property color listButtonColor: darkMode ? "#333333" : "#eeeeee"
+        readonly property color separatorColor: darkMode ? "#1C1C1C" : "#CCCCCC"
+        readonly property color accentColor: "#1981BD"
+    }
 
     QtObject {
         id: deviceState
