@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtCore
 
 import "pages" as Pages
 import "overlay" as Overlay
@@ -12,11 +13,24 @@ ApplicationWindow {
     height: 750
     title: "Subsurface"
 
-    required property var builtInStyles
+    Settings {
+        id: userPrefs
+        property var theme: Qt.Unknown
+
+        property string savedBrand
+        property string savedModel
+        property string savedConnectionMode
+        property string savedPort
+    }
 
     // ── Colors ──────────────────────────────────────────────────
+    QtObject {
+        id: appColors
 
-    readonly property bool darkMode: Qt.styleHints.colorScheme === Qt.Dark
+        readonly property bool followSystem: userPrefs.theme === Qt.Unknown
+        readonly property bool darkMode: followSystem
+                                         ? Qt.styleHints.colorScheme === Qt.Dark
+                                         : userPrefs.theme === Qt.Dark
 
     readonly property color bgColor : darkMode ? "#000000" : "#FFFFFF"
     readonly property color textColor : darkMode ? "#FFFFFF" : "#000000"
@@ -28,10 +42,10 @@ ApplicationWindow {
     QtObject {
         id: deviceState
 
-        property string selectedBrand: ""
-        property string selectedModel: ""
-        property string selectedConnectionMode: ""
-        property string selectedPort: ""
+        property string selectedBrand: userPrefs.savedBrand
+        property string selectedModel: userPrefs.savedModel
+        property string selectedConnectionMode: userPrefs.savedConnectionMode
+        property string selectedPort: userPrefs.savedPort
         property bool isDeviceConnected: dcWrapper.connected
 
         readonly property var devices: dcWrapper ? dcWrapper.supportedDevices : [];

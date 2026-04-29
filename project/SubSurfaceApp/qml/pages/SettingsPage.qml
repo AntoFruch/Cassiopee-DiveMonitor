@@ -2,218 +2,190 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-ScrollView {
+Item {
     id: root
-
     required property var deviceState
 
     property string title: "Settings"
     property bool hideSettingsButton: true
-    property var settingValues: ({
-        "language": "English",
-        "theme": Qt.styleHints.colorScheme === Qt.Dark ? "Night" : "Day",
-        "depth": "Meter (m)",
-        "pressure": "bar (bar)",
-        "temperature": "Celsius (°C)",
-        "velocity": "Meter per second (m/s)"
-    })
-    property var settingOptions: ({
-        "device": ["Mares quad Air", "Device 2", "Device 3"],
-        "language": ["English", "Francais"],
-        "theme": ["Day", "Night"],
-        "depth": ["Meter (m)", "Feet (ft)"],
-        "pressure": ["bar (bar)", "psi (psi)"],
-        "temperature": ["Celsius (°C)", "Fahrenheit (°F)"],
-        "velocity": ["Meter per second (m/s)", "Miles per hour (mph)"]
-    })
-    property string currentSettingKey: ""
-    property string popupTitle: ""
-    property var currentOptions: []
 
-    function settingValue(settingKey, fallbackValue) {
-        if (settingKey === "device")
-            return deviceState.selectedBrand ? deviceState.selectedBrand + " " + deviceState.selectedModel + " | " + deviceState.selectedConnectionMode : "No device chosen";
-
-        return settingValues[settingKey] !== undefined ? settingValues[settingKey] : fallbackValue
+    Rectangle {
+        anchors.fill: parent
+        color: appColors.bgColor
     }
 
-    function openSettingPopup(settingKey, titleText) {
-        if (settingKey === "device") {
-            devicePickerDialog.openDialog()
-            return
-        }
+    Flickable {
+        anchors.fill: parent
+        contentWidth: width
+        contentHeight: contentColumn.implicitHeight + 24
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
 
-        currentSettingKey = settingKey
-        popupTitle = titleText
-        currentOptions = settingOptions[settingKey] || []
-        settingsPopup.open()
-    }
+        Column {
+            id: contentColumn
+            width: parent.width
+            spacing: 18
 
-    function applySettingValue(value) {
-        var updatedValues = Object.assign({}, settingValues)
-        updatedValues[currentSettingKey] = value
-        settingValues = updatedValues
+            Item {
+                width: parent.width
+                height: 20
+            }
 
-        if (currentSettingKey === "theme") {
-            Qt.styleHints.colorScheme = value === "Night" ? Qt.Dark : Qt.Light
-        }
+            Column {
+                width: parent.width - 32
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 6
 
-        settingsPopup.close()
-    }
-
-    Layout.fillWidth: true
-    Layout.fillHeight: true
-    clip: true
-
-    background: Rectangle {
-        color: bgColor
-    }
-
-    Column {
-        width: root.availableWidth
-        topPadding: 18
-        bottomPadding: 24
-
-        Repeater {
-            model: [
-                { type: "item", key: "device", label: "Set a device", popupTitle: "Choose device" },
-                { type: "item", key: "language", label: "Language", popupTitle: "Choose language" },
-                { type: "item", key: "theme", label: "Theme", popupTitle: "Choose theme" },
-                { type: "section", label: "Unity parameter" },
-                { type: "item", key: "depth", label: "Deepness/Distance", popupTitle: "Choose depth unit" },
-                { type: "item", key: "pressure", label: "Pressure", popupTitle: "Choose pressure unit" },
-                { type: "item", key: "temperature", label: "Temperature", popupTitle: "Choose temperature unit" },
-                { type: "item", key: "velocity", label: "Velocity", popupTitle: "Choose velocity unit" }
-            ]
-
-            delegate: Item {
-                width: root.availableWidth
-                height: modelData.type === "section" ? 54 : 84
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                }
-
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    height: modelData.type === "section" ? 0 : 1
-                    color: separatorColor
-                }
-
-                Column {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 16
-                    spacing: modelData.type === "section" ? 0 : 4
-
-                    Text {
-                        text: modelData.label
-                        font.pixelSize: modelData.type === "section" ? 14 : 18
-                        font.bold: true
-                        color: modelData.type === "section" ? "#F4A321" : textColor
-                    }
-
-                    Text {
-                        visible: modelData.type === "item"
-                        text: root.settingValue(modelData.key, "")
-                        font.pixelSize: 17
-                        font.bold: true
-                        color: "#A6A6A6"
-                    }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: modelData.type === "item"
-                    z: 2
-                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    onClicked: {
-                        root.openSettingPopup(modelData.key, modelData.popupTitle)
-                    }
+                Label {
+                    width: parent.width
+                    text: "App and dive computer configuration"
+                    color: Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.65)
+                    font.pixelSize: 14
+                    wrapMode: Text.WordWrap
                 }
             }
-        }
-    }
 
-    Popup {
-        id: settingsPopup
-        parent: Overlay.overlay
-        x: Math.round((root.width - width) / 2)
-        y: 150
-        width: Math.min(root.width - 32, 260)
-        modal: true
-        focus: true
-        padding: 0
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+            Column {
+                width: parent.width
+                spacing: 8
 
-        background: Rectangle {
-            radius: 18
-            color: "#F7F7F7"
-            border.width: 2
-            border.color: accentColor
-        }
-
-        contentItem: Column {
-            spacing: 0
-            clip: true
-
-            Rectangle {
-                width: settingsPopup.availableWidth
-                height: 54
-                color: "transparent"
-
-                Text {
-                    anchors.centerIn: parent
-                    text: root.popupTitle
+                Label {
+                    x: 16
+                    text: "Device"
+                    color: appColors.accentColor
                     font.pixelSize: 18
                     font.bold: true
-                    color: textColor
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: deviceRow.height
+                    color: appColors.bgColor
+
+                    Column {
+                        anchors.fill: parent
+                        spacing: 0
+
+                        ItemDelegate {
+                            id: deviceRow
+                            width: parent.width
+                            height: 64
+                            leftPadding: 16
+                            rightPadding: 16
+                            onClicked: devicePickerDialog.openDialog()
+
+                            background: Rectangle {
+                                color: "transparent"
+                            }
+
+                            contentItem: RowLayout {
+                                spacing: 12
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 4
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: "Dive computer"
+                                        color: appColors.textColor
+                                        font.pixelSize: 17
+                                        font.bold: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: deviceState.selectedModel
+                                              ? deviceState.selectedBrand + " - " + deviceState.selectedModel
+                                              : "Choisir un appareil"
+                                        color: Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.65)
+                                        font.pixelSize: 14
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                Label {
+                                    text: ">"
+                                    color: Qt.rgba(appColors.textColor.r, appColors.textColor.g, appColors.textColor.b, 0.4)
+                                    font.pixelSize: 18
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: parent.width - 16
+                            height: 1
+                            x: 16
+                            color: appColors.separatorColor
+                        }
+                    }
                 }
             }
 
-            Repeater {
-                model: root.currentOptions
+            Column {
+                width: parent.width
+                spacing: 8
 
-                delegate: ItemDelegate {
-                    width: settingsPopup.availableWidth
-                    height: 48
-                    text: modelData
-                    font.pixelSize: 16
-                    font.bold: root.settingValue(root.currentSettingKey, "") === modelData
-                    leftPadding: 18
-                    rightPadding: 18
+                Label {
+                    x: 16
+                    text: "Appearance"
+                    color: appColors.accentColor
+                    font.pixelSize: 18
+                    font.bold: true
+                }
 
-                    background: Rectangle {
-                        radius: 12
-                        color: "transparent"
+                Rectangle {
+                    width: parent.width
+                    height: 82
+                    color: appColors.bgColor
 
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.leftMargin: 8
-                            anchors.rightMargin: 8
-                            anchors.topMargin: 3
-                            anchors.bottomMargin: 3
-                            radius: 10
-                            color: highlighted || root.settingValue(root.currentSettingKey, "") === modelData ? "#E8EEFF" : "transparent"
+                    Column {
+                        anchors.fill: parent
+                        spacing: 0
+
+                        Item {
+                            width: parent.width
+                            height: 64
+
+                            Label {
+                                text: "Theme"
+                                anchors.left: parent.left
+                                anchors.leftMargin: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: appColors.textColor
+                                font.pixelSize: 17
+                                font.bold: true
+                            }
+
+                            ComboBox {
+                                id: themeComboBox
+                                anchors.right: parent.right
+                                anchors.rightMargin: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 140
+                                model: ["System", "Light", "Dark"]
+                                currentIndex: userPrefs.theme === Qt.Light ? 1 : (userPrefs.theme === Qt.Dark ? 2 : 0)
+
+                                onActivated: function(index) {
+                                    if (index === 0) {
+                                        userPrefs.theme = Qt.Unknown
+                                    } else if (index === 1) {
+                                        userPrefs.theme = Qt.Light
+                                    } else {
+                                        userPrefs.theme = Qt.Dark
+                                    }
+                                }
+                            }
                         }
 
                         Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
+                            width: parent.width - 16
                             height: 1
-                            visible: index < root.currentOptions.length - 1
-                            color: "#D8D8D8"
+                            x: 16
+                            color: appColors.separatorColor
                         }
-                    }
-
-                    onClicked: {
-                        root.applySettingValue(modelData)
                     }
                 }
             }

@@ -29,7 +29,7 @@ ListView {
                 verticalCenter: parent.verticalCenter
             }
             height: 60
-            color: listButtonColor
+            color: appColors.listButtonColor
             border.width: 0    // pas de bordure
             radius: 0          // pas d'arrondi
 
@@ -38,7 +38,7 @@ ListView {
                 anchors.bottom: parent.bottom
                 width: parent.width
                 height: 1
-                color: separatorColor
+                color: appColors.separatorColor
             }
 
             Text {
@@ -50,7 +50,7 @@ ListView {
                 text: model.date + " | Dive time :  " + model.diveTime + "s"
                 font.pixelSize: 16
                 font.bold: true
-                color: textColor
+                color: appColors.textColor
             }
 
             MouseArea {
