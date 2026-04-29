@@ -47,8 +47,10 @@ qt_add_qml_module(appSubSurfaceApp
     URI SubSurfaceApp
     QML_FILES 
         qml/Main.qml
+        qml/components/DiveGraphView.qml
         qml/pages/DiveList.qml
         qml/pages/DiveDetails.qml
+        qml/pages/DiveGraphPage.qml
         qml/pages/AddDives.qml
         qml/overlay/AddDiveButton.qml
         qml/overlay/Header.qml

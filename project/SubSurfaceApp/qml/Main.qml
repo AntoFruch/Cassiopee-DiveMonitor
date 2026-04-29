@@ -6,6 +6,7 @@ import "pages" as Pages
 import "overlay" as Overlay
 
 ApplicationWindow {
+    id: appWindow
     visible: true
     width: 400
     height: 750
@@ -22,6 +23,7 @@ ApplicationWindow {
     readonly property color listButtonColor : darkMode ?  "#333333" : "#eeeeee"
     readonly property color separatorColor : darkMode ? "#1C1C1C" : "#CCCCCC"
     readonly property color accentColor: "#1981BD"
+    readonly property bool hideHeaderForCurrentPage: !!stack.currentItem && !!stack.currentItem.hideHeader
 
     QtObject {
         id: deviceState
@@ -64,6 +66,8 @@ ApplicationWindow {
         // ── Header bar ──────────────────────────────────────────────────────
         Overlay.Header{
             id: header
+            visible: !appWindow.hideHeaderForCurrentPage
+            Layout.preferredHeight: visible ? implicitHeight : 0
         }
         // ── Main display Space ──────────────────────────────────────────────────────
         StackView{
