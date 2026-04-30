@@ -245,42 +245,44 @@ struct TempEntry {
     QVariant temperature;
 };
 
+struct SampleContext {
+    QList<DiveEntry>* entries;
+    TempEntry current;
+};
+
 void dive_sample_callback(dc_sample_type_t type,
                           const dc_sample_value_t *value,
-                          void *userdata
-                          ){
-    // userdata est la liste finale des entries
-    QList<DiveEntry>* entries = (QList<DiveEntry>*) userdata;
-
-    // static pour garder l’état entre les appels
-    static TempEntry current;
+                          void *userdata)
+{
+    // On récupère notre contexte local à cette plongée
+    SampleContext* ctx = static_cast<SampleContext*>(userdata);
 
     switch(type) {
     case DC_SAMPLE_TIME:
-        // Nouveau temps → on pousse l'ancien s'il est valide
-        if (current.time >= 0) {
+        // Si on a déjà un point en cours de construction, on le valide
+        if (ctx->current.time >= 0) {
             DiveEntry e;
-            e.time = current.time;
-            e.depth = current.depth;
-            e.temperature = current.temperature;
-            entries->append(e);
+            e.time = ctx->current.time;
+            e.depth = ctx->current.depth;
+            e.temperature = ctx->current.temperature;
+            ctx->entries->append(e);
         }
-        // On réinitialise pour le prochain point
-        current.time = value->time / 1000;
-        current.depth = QVariant();
-        current.temperature = QVariant();
+
+        // Initialisation du nouveau point
+        ctx->current.time = value->time / 1000;
+        ctx->current.depth = QVariant();
+        ctx->current.temperature = QVariant();
         break;
 
     case DC_SAMPLE_DEPTH:
-        current.depth = value->depth;
+        ctx->current.depth = value->depth;
         break;
 
     case DC_SAMPLE_TEMPERATURE:
-        current.temperature = value->temperature;
+        ctx->current.temperature = value->temperature;
         break;
 
     default:
-        // ignorer les autres types pour l'instant
         break;
     }
 }
@@ -378,7 +380,23 @@ int dive_callback(const unsigned char *data,
     if (dc_parser_get_field(parser, DC_FIELD_TEMPERATURE_MAXIMUM, 0, &dval) == DC_STATUS_SUCCESS)
         dive.max_temperature = dval;
 
-    dc_parser_samples_foreach(parser, dive_sample_callback, &dive.entries);
+    // --- LOGIQUE DE SAMPLES CORRIGÉE ---
+    SampleContext sCtx;
+    sCtx.entries = &dive.entries;
+    sCtx.current = TempEntry(); // Initialise proprement (time = -1)
+
+    dc_parser_samples_foreach(parser, dive_sample_callback, &sCtx);
+
+    // Le callback enregistre le point N quand il reçoit le temps du point N+1.
+    // Le dernier point n'a pas de N+1, il faut donc le pousser manuellement ici.
+    if (sCtx.current.time >= 0) {
+        DiveEntry last;
+        last.time = sCtx.current.time;
+        last.depth = sCtx.current.depth;
+        last.temperature = sCtx.current.temperature;
+        dive.entries.append(last);
+    }
+
     ctx->dives.append(dive);
     qDebug() << "dive " << ctx->dives.length() <<"  fetched ";
     return 1;
