@@ -13,12 +13,6 @@ ApplicationWindow {
     height: 750
     title: "Subsurface"
 
-    readonly property bool darkMode: appColors.darkMode
-    readonly property color bgColor: appColors.bgColor
-    readonly property color textColor: appColors.textColor
-    readonly property color listButtonColor: appColors.listButtonColor
-    readonly property color separatorColor: appColors.separatorColor
-    readonly property color accentColor: appColors.accentColor
     readonly property bool hideHeaderForCurrentPage: !!stack.currentItem && !!stack.currentItem.hideHeader
 
     Settings {

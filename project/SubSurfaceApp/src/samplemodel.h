@@ -1,6 +1,7 @@
 #ifndef SAMPLEMODEL_H
 #define SAMPLEMODEL_H
 
+#include <QVariantMap>
 #include <QtGraphs/QLineSeries>
 #include "divedatabase.h"
 #include "DiveDataStructure.h"
@@ -35,6 +36,8 @@ public:
      * @param mode
      */
     Q_INVOKABLE void setDisplayMode(DisplayMode mode);
+    Q_INVOKABLE QVariantMap sampleDetailsAtRenderCoordinates(qreal renderX, qreal renderY) const;
+    Q_INVOKABLE QPointF displayPointAtIndex(int index) const;
 
     qreal displayMin() const { return m_displayMin; }
     qreal displayMax() const { return m_displayMax; }
@@ -44,6 +47,11 @@ signals:
 
 private:
     void updateDisplayRange(const QList<QPointF> &points);
+    qreal displayValueForEntry(int index) const;
+    qreal speedValueForEntry(int index) const;
+    QVariantMap buildSampleDetails(int index) const;
+    int closestSampleIndex(const QPointF &queryPoint) const;
+    bool isValidEntryIndex(int index) const;
 
     DisplayMode m_currentMode;
     QList<DiveEntry> m_rawEntries;

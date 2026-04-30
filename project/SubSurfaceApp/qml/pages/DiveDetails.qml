@@ -17,9 +17,9 @@ ColumnLayout {
         Layout.preferredHeight: root.height * 0.5
 
         dive: root.dive
-        accentColorValue: accentColor
-        backgroundColorValue: bgColor
-        textColorValue: textColor
+        accentColorValue: appColors.accentColor
+        backgroundColorValue: appColors.bgColor
+        textColorValue: appColors.textColor
         showModeSelector: true
         overlayModeSelector: false
         showExpandButton: true

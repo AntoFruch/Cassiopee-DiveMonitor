@@ -16,6 +16,10 @@ Item {
     property bool overlayModeSelector: false
     property bool showExpandButton: false
     property int displayMode: displayDepth
+    property int selectedSampleIndex: -1
+    property var selectedSampleData: null
+    property point selectedDisplayPoint: Qt.point(0, 0)
+    property bool samplePopupVisible: false
 
     readonly property int displayDepth: 0
     readonly property int displaySpeed: 1
@@ -27,6 +31,33 @@ Item {
     ]
 
     signal expandRequested()
+
+    function clearSelectedSample() {
+        selectedSampleIndex = -1
+        selectedSampleData = null
+        selectedDisplayPoint = Qt.point(0, 0)
+        samplePopupVisible = false
+    }
+
+    function setSelectedSample(details) {
+        if (!details || !details.valid) {
+            clearSelectedSample()
+            return
+        }
+
+        selectedSampleIndex = Number(details.index)
+        selectedSampleData = details
+        refreshSelectedSamplePosition()
+        samplePopupVisible = true
+    }
+
+    function refreshSelectedSamplePosition() {
+        if (selectedSampleIndex < 0)
+            return
+
+        const displayPoint = myDataSeries.displayPointAtIndex(selectedSampleIndex)
+        selectedDisplayPoint = Qt.point(displayPoint.x, displayPoint.y)
+    }
 
     function modeIndexFor(mode) {
         for (let i = 0; i < yModeOptions.length; ++i) {
@@ -102,6 +133,7 @@ Item {
                 root.displayMode = mode
                 myDataSeries.setDisplayMode(mode)
                 setClampedView(baseXMin, baseXMax, baseYMin, baseYMax)
+                root.refreshSelectedSamplePosition()
                 scheduleGridUpdate()
             }
 
@@ -335,8 +367,10 @@ Item {
                 property point lastPoint: Qt.point(0, 0)
 
                 onActiveChanged: {
-                    if (active)
+                    if (active) {
+                        root.clearSelectedSample()
                         lastPoint = centroid.position
+                    }
                 }
 
                 onCentroidChanged: {
@@ -368,6 +402,7 @@ Item {
 
                 onActiveChanged: {
                     if (active) {
+                        root.clearSelectedSample()
                         lastScale = 1.0
                         lastCentroid = centroid.position
                     }
@@ -431,6 +466,105 @@ Item {
         Item {
             id: graphOverlay
             anchors.fill: parent
+            readonly property bool selectedSampleVisible: root.samplePopupVisible
+                                                         && root.selectedSampleIndex >= 0
+                                                         && graph.plotArea.width > 0
+                                                         && graph.plotArea.height > 0
+                                                         && graphOverlay.isDisplayPointVisible(root.selectedDisplayPoint)
+            readonly property point selectedSamplePosition: selectedSampleVisible
+                                                             ? graphOverlay.plotPositionForDataPoint(root.selectedDisplayPoint)
+                                                             : Qt.point(0, 0)
+            readonly property real overlayPadding: 8
+
+            function clamp(value, minValue, maxValue) {
+                return Math.max(minValue, Math.min(maxValue, value))
+            }
+
+            function pointInPlotArea(point) {
+                return point.x >= graph.plotArea.x
+                    && point.x <= graph.plotArea.x + graph.plotArea.width
+                    && point.y >= graph.plotArea.y
+                    && point.y <= graph.plotArea.y + graph.plotArea.height
+            }
+
+            function pointInsideItem(point, item) {
+                if (!item || !item.visible)
+                    return false
+
+                const mappedPoint = item.mapFromItem(graphOverlay, point.x, point.y)
+                return mappedPoint.x >= 0
+                    && mappedPoint.x <= item.width
+                    && mappedPoint.y >= 0
+                    && mappedPoint.y <= item.height
+            }
+
+            function plotPositionForDataPoint(point) {
+                const xRange = Math.max(0.000001, axisX.max - axisX.min)
+                const yRange = Math.max(0.000001, axisY.max - axisY.min)
+                return Qt.point(
+                    graph.plotArea.x + graph.plotArea.width * ((point.x - axisX.min) / xRange),
+                    graph.plotArea.y + graph.plotArea.height * ((axisY.max - point.y) / yRange)
+                )
+            }
+
+            function isDisplayPointVisible(point) {
+                const minY = Math.min(axisY.min, axisY.max)
+                const maxY = Math.max(axisY.min, axisY.max)
+                return point.x >= axisX.min
+                    && point.x <= axisX.max
+                    && point.y >= minY
+                    && point.y <= maxY
+            }
+
+            function clampedCalloutX(calloutWidth) {
+                const minX = graph.plotArea.x + overlayPadding
+                const maxX = graph.plotArea.x + graph.plotArea.width - calloutWidth - overlayPadding
+
+                if (maxX <= minX)
+                    return minX
+
+                return clamp(selectedSamplePosition.x - calloutWidth / 2, minX, maxX)
+            }
+
+            function clampedCalloutY(calloutHeight) {
+                const minY = graph.plotArea.y + overlayPadding
+                const maxY = graph.plotArea.y + graph.plotArea.height - calloutHeight - overlayPadding
+
+                if (maxY <= minY)
+                    return minY
+
+                const preferredAbove = selectedSamplePosition.y - calloutHeight - 16
+                if (preferredAbove >= minY)
+                    return preferredAbove
+
+                return clamp(selectedSamplePosition.y + 16, minY, maxY)
+            }
+
+            TapHandler {
+                acceptedButtons: Qt.LeftButton
+                gesturePolicy: TapHandler.ReleaseWithinBounds
+
+                onTapped: function(eventPoint) {
+                    const tapPoint = eventPoint.position
+
+                    if (graphOverlay.pointInsideItem(tapPoint, expandButton)
+                        || graphOverlay.pointInsideItem(tapPoint, overlayModeSelector)) {
+                        return
+                    }
+
+                    if (!graphOverlay.pointInPlotArea(tapPoint)) {
+                        root.clearSelectedSample()
+                        return
+                    }
+
+                    root.setSelectedSample(
+                        myDataSeries.sampleDetailsAtRenderCoordinates(
+                            tapPoint.x - graph.plotArea.x,
+                            tapPoint.y - graph.plotArea.y
+                        )
+                    )
+                }
+            }
 
             function yTickX(labelWidth) {
                 return Math.max(
@@ -491,6 +625,37 @@ Item {
                     text: graph.yAxisLegendText()
                     color: "#AAAAAA"
                 }
+            }
+
+            Rectangle {
+                id: selectedSampleMarker
+                visible: graphOverlay.selectedSampleVisible
+                x: graphOverlay.selectedSamplePosition.x - width / 2
+                y: graphOverlay.selectedSamplePosition.y - height / 2
+                width: 14
+                height: 14
+                radius: width / 2
+                color: root.backgroundColorValue
+                border.width: 3
+                border.color: root.accentColorValue
+                z: 2
+            }
+
+            DiveSampleCallout {
+                id: sampleCallout
+                visible: graphOverlay.selectedSampleVisible
+                x: graphOverlay.clampedCalloutX(width)
+                y: graphOverlay.clampedCalloutY(height)
+                z: 3
+
+                accentColorValue: root.accentColorValue
+                backgroundColorValue: root.backgroundColorValue
+                textColorValue: root.textColorValue
+                timeSeconds: root.selectedSampleData ? Number(root.selectedSampleData.timeSeconds) : 0
+                depthMeters: root.selectedSampleData ? Number(root.selectedSampleData.depthMeters) : 0
+                temperatureCelsius: root.selectedSampleData ? Number(root.selectedSampleData.temperatureCelsius) : 0
+                hasTemperature: root.selectedSampleData ? !!root.selectedSampleData.hasTemperature : false
+                speedMetersPerMinute: root.selectedSampleData ? Number(root.selectedSampleData.speedMetersPerMinute) : 0
             }
 
             Button {

@@ -13,15 +13,15 @@ Rectangle {
     readonly property bool isLandscape: Window.width > Window.height
     readonly property bool hideHeader: isLandscape
 
-    color: bgColor
+    color: appColors.bgColor
 
     DiveGraphView {
         id: fullGraph
         anchors.fill: parent
         dive: root.dive
-        accentColorValue: accentColor
-        backgroundColorValue: bgColor
-        textColorValue: textColor
+        accentColorValue: appColors.accentColor
+        backgroundColorValue: appColors.bgColor
+        textColorValue: appColors.textColor
         displayMode: root.initialDisplayMode
         showModeSelector: true
         overlayModeSelector: root.isLandscape
