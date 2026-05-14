@@ -1,4 +1,48 @@
 #include "samplemodel.h"
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+#include <limits>
+
+namespace {
+bool hasSampleValue(const QVariant &value)
+{
+    return value.isValid() && !value.isNull();
+}
+}
+
+void SampleModel::updateDisplayRange(const QList<QPointF> &points) {
+    qreal minValue = 0.0;
+    qreal maxValue = 0.0;
+
+    if (points.isEmpty()) {
+        minValue = m_currentMode == DEPTH ? -1.0 : 0.0;
+        maxValue = 1.0;
+    } else {
+        minValue = points.first().y();
+        maxValue = points.first().y();
+
+        for (const auto &point : points) {
+            minValue = std::min(minValue, point.y());
+            maxValue = std::max(maxValue, point.y());
+        }
+
+        if (qFuzzyCompare(minValue + 1.0, maxValue + 1.0)) {
+            const qreal padding = std::max<qreal>(1.0, std::abs(minValue) * 0.1);
+            minValue -= padding;
+            maxValue += padding;
+        }
+    }
+
+    if (qFuzzyCompare(m_displayMin + 1.0, minValue + 1.0)
+        && qFuzzyCompare(m_displayMax + 1.0, maxValue + 1.0)) {
+        return;
+    }
+
+    m_displayMin = minValue;
+    m_displayMax = maxValue;
+    emit displayRangeChanged();
+}
 
 void SampleModel::setEntries(const int diveId) {
     // 1. On charge TOUTES les données une seule fois
@@ -15,29 +59,140 @@ void SampleModel::setDisplayMode(DisplayMode mode) {
     updateSeries(); // On re-génère les points sans re-interroger la BDD
 }
 
+QVariantMap SampleModel::sampleDetailsAtRenderCoordinates(qreal renderX, qreal renderY) const
+{
+    if (m_rawEntries.isEmpty())
+        return { { "valid", false } };
+
+    const QPointF queryPoint = const_cast<SampleModel *>(this)->dataPointCoordinatesAt(renderX, renderY);
+    return buildSampleDetails(closestSampleIndex(queryPoint));
+}
+
+QPointF SampleModel::displayPointAtIndex(int index) const
+{
+    if (!isValidEntryIndex(index))
+        return QPointF();
+
+    return QPointF(m_rawEntries.at(index).time, displayValueForEntry(index));
+}
+
+qreal SampleModel::displayValueForEntry(int index) const
+{
+    if (!isValidEntryIndex(index))
+        return 0.0;
+
+    const DiveEntry &entry = m_rawEntries.at(index);
+
+    switch (m_currentMode) {
+    case TEMPERATURE:
+        return hasSampleValue(entry.temperature) ? entry.temperature.toDouble() : 0.0;
+    case DEPTH:
+        // Depth est inversé pour que la surface soit vers le haut.
+        return -(hasSampleValue(entry.depth) ? entry.depth.toDouble() : 0.0);
+    case SPEED:
+        return speedValueForEntry(index);
+    default:
+        return 0.0;
+    }
+}
+
+qreal SampleModel::speedValueForEntry(int index) const
+{
+    if (!isValidEntryIndex(index) || index == 0)
+        return 0.0;
+
+    const DiveEntry &currentEntry = m_rawEntries.at(index);
+    const DiveEntry &previousEntry = m_rawEntries.at(index - 1);
+    const double deltaTime = currentEntry.time - previousEntry.time;
+
+    if (deltaTime <= 0.0)
+        return 0.0;
+
+    const double currentDepth = hasSampleValue(currentEntry.depth) ? currentEntry.depth.toDouble() : 0.0;
+    const double previousDepth = hasSampleValue(previousEntry.depth) ? previousEntry.depth.toDouble() : 0.0;
+    return std::abs(currentDepth - previousDepth) / deltaTime * 60.0;
+}
+
+QVariantMap SampleModel::buildSampleDetails(int index) const
+{
+    QVariantMap details;
+    details.insert("valid", false);
+
+    if (!isValidEntryIndex(index))
+        return details;
+
+    const DiveEntry &entry = m_rawEntries.at(index);
+    const bool hasTemperature = hasSampleValue(entry.temperature);
+
+    details.insert("valid", true);
+    details.insert("index", index);
+    details.insert("timeSeconds", entry.time);
+    details.insert("depthMeters", hasSampleValue(entry.depth) ? entry.depth.toDouble() : 0.0);
+    details.insert("temperatureCelsius", hasTemperature ? entry.temperature.toDouble() : 0.0);
+    details.insert("hasTemperature", hasTemperature);
+    details.insert("speedMetersPerMinute", speedValueForEntry(index));
+    details.insert("displayY", displayValueForEntry(index));
+    return details;
+}
+
+int SampleModel::closestSampleIndex(const QPointF &queryPoint) const
+{
+    if (m_rawEntries.isEmpty())
+        return -1;
+
+    const auto lowerIt = std::lower_bound(
+        m_rawEntries.cbegin(),
+        m_rawEntries.cend(),
+        queryPoint.x(),
+        [](const DiveEntry &entry, qreal value) {
+            return entry.time < value;
+        }
+    );
+
+    QList<int> candidateIndexes;
+    if (lowerIt != m_rawEntries.cend())
+        candidateIndexes.append(static_cast<int>(std::distance(m_rawEntries.cbegin(), lowerIt)));
+    if (lowerIt != m_rawEntries.cbegin())
+        candidateIndexes.append(static_cast<int>(std::distance(m_rawEntries.cbegin(), lowerIt)) - 1);
+
+    if (candidateIndexes.isEmpty())
+        candidateIndexes.append(m_rawEntries.size() - 1);
+
+    const double xRange = std::max(1.0, m_rawEntries.last().time - m_rawEntries.first().time);
+    const double yRange = std::max(1.0, static_cast<double>(m_displayMax - m_displayMin));
+
+    int bestIndex = candidateIndexes.first();
+    double bestDistanceSquared = std::numeric_limits<double>::max();
+
+    for (int candidateIndex : candidateIndexes) {
+        const double candidateX = m_rawEntries.at(candidateIndex).time;
+        const double candidateY = displayValueForEntry(candidateIndex);
+        const double dx = (candidateX - queryPoint.x()) / xRange;
+        const double dy = (candidateY - queryPoint.y()) / yRange;
+        const double distanceSquared = dx * dx + dy * dy;
+
+        if (distanceSquared < bestDistanceSquared) {
+            bestDistanceSquared = distanceSquared;
+            bestIndex = candidateIndex;
+        }
+    }
+
+    return bestIndex;
+}
+
+bool SampleModel::isValidEntryIndex(int index) const
+{
+    return index >= 0 && index < m_rawEntries.size();
+}
+
 void SampleModel::updateSeries() {
     QList<QPointF> points;
     points.reserve(m_rawEntries.size());
-
-    for (const auto &e : m_rawEntries) {
-        double x = QVariant(e.time).toDouble();
-        double y;
-
-        switch (m_currentMode){
-            case TEMPERATURE:
-                y = QVariant(e.temperature).toDouble();
-                break;
-            case DEPTH:
-                y = QVariant(e.depth).toDouble();
-                break;
-            case SPEED:
-                break;
-            default:
-                break;
-            }
-
-        points.append(QPointF(x, y));
+    for (int index = 0; index < m_rawEntries.size(); ++index) {
+        const DiveEntry &entry = m_rawEntries.at(index);
+        points.append(QPointF(entry.time, displayValueForEntry(index)));
     }
 
     this->replace(points);
+    updateDisplayRange(points);
 }

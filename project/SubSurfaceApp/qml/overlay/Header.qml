@@ -5,7 +5,7 @@ import QtQuick.Layouts
 Rectangle {
     id: header
     Layout.fillWidth: true
-    height: 70
+    implicitHeight: 70
     color: appColors.accentColor
 
     property var title

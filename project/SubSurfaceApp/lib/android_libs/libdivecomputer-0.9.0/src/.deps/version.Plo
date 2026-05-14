@@ -1,0 +1,3 @@
+version.lo: version.c ../config.h ../include/libdivecomputer/version.h
+../config.h:
+../include/libdivecomputer/version.h:

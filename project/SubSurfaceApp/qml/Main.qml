@@ -7,10 +7,13 @@ import "pages" as Pages
 import "overlay" as Overlay
 
 ApplicationWindow {
+    id: appWindow
     visible: true
     width: 400
     height: 750
     title: "Subsurface"
+
+    readonly property bool hideHeaderForCurrentPage: !!stack.currentItem && !!stack.currentItem.hideHeader
 
     Settings {
         id: userPrefs
@@ -31,10 +34,10 @@ ApplicationWindow {
                                          ? Qt.styleHints.colorScheme === Qt.Dark
                                          : userPrefs.theme === Qt.Dark
 
-        readonly property color bgColor : darkMode ? "#000000" : "#FFFFFF"
-        readonly property color textColor : darkMode ? "#FFFFFF" : "#000000"
-        readonly property color listButtonColor : darkMode ?  "#333333" : "#eeeeee"
-        readonly property color separatorColor : darkMode ? "#1C1C1C" : "#CCCCCC"
+        readonly property color bgColor: darkMode ? "#000000" : "#FFFFFF"
+        readonly property color textColor: darkMode ? "#FFFFFF" : "#000000"
+        readonly property color listButtonColor: darkMode ? "#333333" : "#eeeeee"
+        readonly property color separatorColor: darkMode ? "#1C1C1C" : "#CCCCCC"
         readonly property color accentColor: "#1981BD"
     }
 
@@ -79,6 +82,8 @@ ApplicationWindow {
         // ── Header bar ──────────────────────────────────────────────────────
         Overlay.Header{
             id: header
+            visible: !appWindow.hideHeaderForCurrentPage
+            Layout.preferredHeight: visible ? implicitHeight : 0
         }
         // ── Main display Space ──────────────────────────────────────────────────────
         StackView{
