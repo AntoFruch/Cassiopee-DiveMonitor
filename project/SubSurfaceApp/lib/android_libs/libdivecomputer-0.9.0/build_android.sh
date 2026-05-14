@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. SET YOUR PATHS
-# Adjust NDK_PATH to match your actual installation version
+# Adjust NDK_PATH to match actual installation version
 export NDK_PATH=$HOME/Library/Android/sdk/ndk/27.2.12479018
 export TOOLCHAIN=$NDK_PATH/toolchains/llvm/prebuilt/darwin-x86_64
 
