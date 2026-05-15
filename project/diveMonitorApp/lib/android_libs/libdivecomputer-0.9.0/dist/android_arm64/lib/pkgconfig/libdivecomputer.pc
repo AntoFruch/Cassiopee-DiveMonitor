@@ -1,4 +1,4 @@
-prefix=/Users/anto/Cours/2A/Cassiopee-DiveMonitor/project/SubSurfaceApp/lib/android_libs/libdivecomputer-0.9.0/dist/android_arm64
+prefix=/Users/anto/Cours/2A/Cassiopee-DiveMonitor/project/diveMonitorApp/lib/android_libs/libdivecomputer-0.9.0/dist/android_arm64
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include

@@ -1,5 +1,6 @@
 #include "divecomputerwrapper.h"
 
+#ifdef Q_OS_ANDROID
 extern "C" {
     JNIEXPORT void JNICALL Java_org_subsurfacedivelog_mobile_SubsurfaceMobileActivity_setUsbDevice(JNIEnv *env, jclass clazz, jobject device) {
         // Optionnel : stocker le device détecté
@@ -12,6 +13,7 @@ extern "C" {
         qDebug() << "Permission accordée, prêt à ouvrir le flux.";
     }
 }
+#endif
 
 DiveComputerWrapper& DiveComputerWrapper::instance()
 {

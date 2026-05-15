@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(SubSurfaceApp VERSION 0.1 LANGUAGES CXX)
+project(DiveMonitorApp VERSION 0.1 LANGUAGES CXX)
 enable_language(CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -63,12 +63,12 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 set(CMAKE_AUTORCC ON)
 
-qt_add_executable(appSubSurfaceApp
+qt_add_executable(appDiveMonitorApp
     src/main.cpp
 )
 
-qt_add_qml_module(appSubSurfaceApp
-    URI SubSurfaceApp
+qt_add_qml_module(appDiveMonitorApp
+    URI DiveMonitorApp
     QML_FILES
         qml/Main.qml
         qml/components/DiveGraphView.qml
@@ -93,18 +93,14 @@ qt_add_qml_module(appSubSurfaceApp
         src/divelistmodel.cpp
         src/samplemodel.h
         src/samplemodel.cpp
-        RESOURCES android/src/org/subsurfacedivelog/mobile/SubsurfaceMobileActivity.java
-        RESOURCES android/src/org/subsurfacedivelog/mobile/AndroidSerial.java
-        SOURCES src/serial_usb_android.cpp
-        SOURCES src/serial_usb_android.h
         SOURCES src/libdivecomputer.h
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
-set_target_properties(appSubSurfaceApp PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appSubSurfaceApp
+set_target_properties(appDiveMonitorApp PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appDiveMonitorApp
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
@@ -112,7 +108,7 @@ set_target_properties(appSubSurfaceApp PROPERTIES
     QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android"
 )
 
-target_link_libraries(appSubSurfaceApp PRIVATE
+target_link_libraries(appDiveMonitorApp PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Graphs
@@ -122,19 +118,26 @@ target_link_libraries(appSubSurfaceApp PRIVATE
 )
 
 if(ANDROID)
+    target_sources(appDiveMonitorApp PRIVATE
+        src/serial_usb_android.cpp
+        src/serial_usb_android.h
+        android/src/org/subsurfacedivelog/mobile/SubsurfaceMobileActivity.java
+        android/src/org/subsurfacedivelog/mobile/AndroidSerial.java
+    )
+
     # This tells Qt's deployment tool to include the library in the APK
-    set_property(TARGET appSubSurfaceApp APPEND PROPERTY
+    set_property(TARGET appDiveMonitorApp APPEND PROPERTY
         QT_ANDROID_EXTRA_LIBS ${LIBDC}
     )
-    set_property(TARGET appSubSurfaceApp PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
+    set_property(TARGET appDiveMonitorApp PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
 endif()
 
 
-target_include_directories(appSubSurfaceApp PRIVATE ${LIBDC_INCLUDE_DIR})
+target_include_directories(appDiveMonitorApp PRIVATE ${LIBDC_INCLUDE_DIR})
 
 
 include(GNUInstallDirs)
-install(TARGETS appSubSurfaceApp
+install(TARGETS appDiveMonitorApp
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

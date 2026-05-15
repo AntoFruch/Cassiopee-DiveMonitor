@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
 
     qDebug() << "init";
-    auto &db = DiveDatabase::instance("/Users/antonin/Desktop/Cours/2A/Cassiopee-SubSurface/project/SubSurfaceApp/resources/database.db");
+    auto &db = DiveDatabase::instance("/Users/antonin/Desktop/Cours/2A/Cassiopee-DiveMonitor/project/DiveMonitorApp/resources/database.db");
 
     DCWrapper dc(&db);
     dc.connect("Mares", "Quad Air");

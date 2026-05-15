@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<DiveListModel>("DiveMonitorCustom", 1, 0, "DiveListModel");
 
     // Generation du template QML
-    engine.loadFromModule("SubSurfaceApp", "Main");
+    engine.loadFromModule("DiveMonitorApp", "Main");
 
     return app.exec();
 }
