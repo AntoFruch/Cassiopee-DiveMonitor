@@ -60,4 +60,18 @@ Rectangle {
             }
         }
     }
+
+    // Icon
+    Image {
+        id: icon
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.leftMargin: 16
+        height: parent.height * 2 / 3
+        fillMode: Image.PreserveAspectFit
+
+        source: "qrc:/icon/icon"
+
+        visible: !backBtn.visible
+    }
 }

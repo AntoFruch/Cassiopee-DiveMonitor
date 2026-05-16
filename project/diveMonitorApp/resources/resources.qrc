@@ -5,6 +5,6 @@
         <file alias="settings">images/settings.png</file>
     </qresource>
     <qresource prefix="/icon">
-        <file>icon/icon.icns</file>
+        <file alias="icon">icon/icon.png</file>
     </qresource>
 </RCC>
