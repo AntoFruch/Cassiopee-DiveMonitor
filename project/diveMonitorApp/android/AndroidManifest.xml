@@ -15,8 +15,8 @@
     <application
         android:name="org.qtproject.qt.android.bindings.QtApplication"
         android:hardwareAccelerated="true"
-        android:label="-- %%INSERT_APP_NAME%% --"
-        android:icon="-- %%INSERT_APP_ICON%% --"
+        android:label="DiveMonitor"
+        android:icon="@drawable/icon"
         android:requestLegacyExternalStorage="true"
         android:enableOnBackInvokedCallback="false"
         android:allowBackup="true"
