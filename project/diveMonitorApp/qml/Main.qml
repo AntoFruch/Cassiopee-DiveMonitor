@@ -11,7 +11,7 @@ ApplicationWindow {
     visible: true
     width: 400
     height: 750
-    title: "Subsurface"
+    title: "DiveMonitor"
 
     readonly property bool hideHeaderForCurrentPage: !!stack.currentItem && !!stack.currentItem.hideHeader
 

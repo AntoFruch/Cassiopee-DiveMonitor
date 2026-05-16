@@ -23,7 +23,7 @@ struct android_usb_serial_device_descriptor {
 std::vector<android_usb_serial_device_descriptor> serial_usb_android_get_devices();
 android_usb_serial_device_descriptor getDescriptor(QJniObject usbDevice);
 
-// --- FONCTIONS À AJOUTER POUR L'EXPOSITION ---
+// --- CODE AJOUTÉ ---
 
 // Ouvre le flux avec le descripteur complet (celle que tu utiliseras dans le wrapper)
 dc_status_t serial_usb_android_open(dc_iostream_t **iostream, dc_context_t *context, void *androidUsbDevice);

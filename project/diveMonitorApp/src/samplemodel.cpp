@@ -98,19 +98,29 @@ qreal SampleModel::displayValueForEntry(int index) const
 
 qreal SampleModel::speedValueForEntry(int index) const
 {
-    if (!isValidEntryIndex(index) || index == 0)
+    if (!isValidEntryIndex(index))
         return 0.0;
 
-    const DiveEntry &currentEntry = m_rawEntries.at(index);
-    const DiveEntry &previousEntry = m_rawEntries.at(index - 1);
-    const double deltaTime = currentEntry.time - previousEntry.time;
+    const int windowRadius = 3;
 
+    // On force le type <int> pour éviter le conflit avec qsizetype
+    int startIndex = std::max<int>(0, index - windowRadius);
+    int endIndex = std::min<int>(m_rawEntries.size() - 1, index + windowRadius);
+
+    if (startIndex == endIndex)
+        return 0.0;
+
+    const DiveEntry &startEntry = m_rawEntries.at(startIndex);
+    const DiveEntry &endEntry = m_rawEntries.at(endIndex);
+
+    const double deltaTime = endEntry.time - startEntry.time;
     if (deltaTime <= 0.0)
         return 0.0;
 
-    const double currentDepth = hasSampleValue(currentEntry.depth) ? currentEntry.depth.toDouble() : 0.0;
-    const double previousDepth = hasSampleValue(previousEntry.depth) ? previousEntry.depth.toDouble() : 0.0;
-    return std::abs(currentDepth - previousDepth) / deltaTime * 60.0;
+    const double startDepth = hasSampleValue(startEntry.depth) ? startEntry.depth.toDouble() : 0.0;
+    const double endDepth = hasSampleValue(endEntry.depth) ? endEntry.depth.toDouble() : 0.0;
+
+    return ((startDepth - endDepth) / deltaTime) * 60.0;
 }
 
 QVariantMap SampleModel::buildSampleDetails(int index) const
