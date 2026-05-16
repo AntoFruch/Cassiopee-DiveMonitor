@@ -4,9 +4,6 @@ import QtQuick.Layouts
 Rectangle {
     id: root
 
-    required property color accentColorValue
-    required property color backgroundColorValue
-    required property color textColorValue
     required property real timeSeconds
     required property real depthMeters
     required property real temperatureCelsius
@@ -14,9 +11,9 @@ Rectangle {
     required property real speedMetersPerMinute
 
     radius: 12
-    color: root.backgroundColorValue
+    color: appColors.bgColor
     border.width: 2
-    border.color: root.accentColorValue
+    border.color: appColors.accentColor
     implicitWidth: contentColumn.implicitWidth + 24
     implicitHeight: contentColumn.implicitHeight + 20
 
@@ -28,13 +25,13 @@ Rectangle {
 
         Text {
             text: "Temps: " + Math.round(root.timeSeconds) + " s"
-            color: root.textColorValue
+            color: appColors.textColor
             font.bold: true
         }
 
         Text {
             text: "Profondeur: " + Number(root.depthMeters).toFixed(1) + " m"
-            color: root.textColorValue
+            color: appColors.textColor
         }
 
         Text {
@@ -42,12 +39,12 @@ Rectangle {
                   + (root.hasTemperature
                      ? Number(root.temperatureCelsius).toFixed(1) + " \u00B0C"
                      : "--")
-            color: root.textColorValue
+            color: appColors.textColor
         }
 
         Text {
             text: "Vitesse: " + Number(root.speedMetersPerMinute).toFixed(1) + " m/min"
-            color: root.textColorValue
+            color: appColors.textColor
         }
     }
 }

@@ -19,9 +19,6 @@ Rectangle {
         id: fullGraph
         anchors.fill: parent
         dive: root.dive
-        accentColorValue: appColors.accentColor
-        backgroundColorValue: appColors.bgColor
-        textColorValue: appColors.textColor
         displayMode: root.initialDisplayMode
         showModeSelector: true
         overlayModeSelector: root.isLandscape

@@ -8,9 +8,6 @@ Item {
     id: root
 
     required property var dive
-    required property color accentColorValue
-    required property color backgroundColorValue
-    required property color textColorValue
 
     property bool showModeSelector: true
     property bool overlayModeSelector: false
@@ -84,7 +81,7 @@ Item {
 
         Text {
             text: "Ordonnée :"
-            color: root.textColorValue
+            color: appColors.textColor
         }
 
         ComboBox {
@@ -320,21 +317,25 @@ Item {
             onHeightChanged: scheduleGridUpdate()
 
             theme: GraphsTheme {
-                readonly property color c1: "#AAAAAA"
-                readonly property color c2: "#333333"
-                readonly property color c3: Qt.lighter(c2, 2)
-
-                colorScheme: Qt.styleHints.colorScheme === Qt.Dark
+                // On mappe colorScheme directement sur le darkMode calculé par ton appColors
+                colorScheme: appColors.darkMode
                     ? GraphsTheme.ColorScheme.Dark
                     : GraphsTheme.ColorScheme.Light
-                grid.mainColor: c3
-                grid.subColor: c2
-                axisX.mainColor: c3
-                axisY.mainColor: c3
-                axisX.subColor: c2
-                axisY.subColor: c2
-                axisX.labelTextColor: c1
-                axisY.labelTextColor: c1
+
+                // Le texte des axes prend la couleur du texte principal de l'app
+                axisX.labelTextColor: appColors.textColor
+                axisY.labelTextColor: appColors.textColor
+
+                // Les lignes principales (axes et grille principale) prennent la couleur des séparateurs
+                axisX.mainColor: appColors.separatorColor
+                axisY.mainColor: appColors.separatorColor
+                grid.mainColor: appColors.separatorColor
+
+                // Les lignes secondaires de la grille (subColor) peuvent être une version
+                // légèrement plus soft ou utiliser la couleur des boutons de liste pour le contraste
+                axisX.subColor: appColors.listButtonColor
+                axisY.subColor: appColors.listButtonColor
+                grid.subColor: appColors.listButtonColor
             }
 
             axisX: ValueAxis {
@@ -451,7 +452,7 @@ Item {
 
             SampleModel {
                 id: myDataSeries
-                color: root.accentColorValue
+                color: appColors.accentColor
                 width: 4
             }
 
@@ -635,9 +636,9 @@ Item {
                 width: 14
                 height: 14
                 radius: width / 2
-                color: root.backgroundColorValue
+                color: appColors.bgColor
                 border.width: 3
-                border.color: root.accentColorValue
+                border.color: appColors.accentColor
                 z: 2
             }
 
@@ -648,9 +649,6 @@ Item {
                 y: graphOverlay.clampedCalloutY(height)
                 z: 3
 
-                accentColorValue: root.accentColorValue
-                backgroundColorValue: root.backgroundColorValue
-                textColorValue: root.textColorValue
                 timeSeconds: root.selectedSampleData ? Number(root.selectedSampleData.timeSeconds) : 0
                 depthMeters: root.selectedSampleData ? Number(root.selectedSampleData.depthMeters) : 0
                 temperatureCelsius: root.selectedSampleData ? Number(root.selectedSampleData.temperatureCelsius) : 0
@@ -677,7 +675,7 @@ Item {
 
                 Text {
                     text: "Ordonnée :"
-                    color: root.textColorValue
+                    color: appColors.textColor
                 }
 
                 ComboBox {
