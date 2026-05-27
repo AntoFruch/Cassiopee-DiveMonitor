@@ -54,7 +54,7 @@ Item {
                         leftMargin: 14
                         verticalCenter: parent.verticalCenter
                     }
-                    text: model.date + " | Dive time :  " + model.diveTime + "s"
+                    text: model.date + " | Dive time :  " + Number(model.diveTime / 60).toFixed(0) + " min"
                     font.pixelSize: 16
                     font.bold: true
                     color: appColors.textColor

@@ -76,6 +76,44 @@ QPointF SampleModel::displayPointAtIndex(int index) const
     return QPointF(m_rawEntries.at(index).time, displayValueForEntry(index));
 }
 
+QVariantMap SampleModel::sampleRangeDetails(int firstIndex, int secondIndex) const
+{
+    QVariantMap details;
+    details.insert("valid", false);
+    details.insert("isRange", true);
+
+    if (!isValidEntryIndex(firstIndex) || !isValidEntryIndex(secondIndex) || firstIndex == secondIndex)
+        return details;
+
+    const int startIndex = std::min(firstIndex, secondIndex);
+    const int endIndex = std::max(firstIndex, secondIndex);
+    const DiveEntry &startEntry = m_rawEntries.at(startIndex);
+    const DiveEntry &endEntry = m_rawEntries.at(endIndex);
+
+    if (!hasSampleValue(startEntry.depth) || !hasSampleValue(endEntry.depth))
+        return details;
+
+    const double durationSeconds = endEntry.time - startEntry.time;
+    if (durationSeconds <= 0.0)
+        return details;
+
+    const double startDepth = startEntry.depth.toDouble();
+    const double endDepth = endEntry.depth.toDouble();
+    const double deltaDepth = endDepth - startDepth;
+
+    details.insert("valid", true);
+    details.insert("startIndex", startIndex);
+    details.insert("endIndex", endIndex);
+    details.insert("startTimeSeconds", startEntry.time);
+    details.insert("endTimeSeconds", endEntry.time);
+    details.insert("durationSeconds", durationSeconds);
+    details.insert("startDepthMeters", startDepth);
+    details.insert("endDepthMeters", endDepth);
+    details.insert("deltaDepthMeters", deltaDepth);
+    details.insert("averageSpeedMetersPerMinute", (deltaDepth / durationSeconds) * 60.0);
+    return details;
+}
+
 qreal SampleModel::displayValueForEntry(int index) const
 {
     if (!isValidEntryIndex(index))
@@ -101,26 +139,83 @@ qreal SampleModel::speedValueForEntry(int index) const
     if (!isValidEntryIndex(index))
         return 0.0;
 
-    const int windowRadius = 3;
+    constexpr int regressionRadius = 2;
+    const int entryCount = static_cast<int>(m_rawEntries.size());
 
-    // On force le type <int> pour éviter le conflit avec qsizetype
-    int startIndex = std::max<int>(0, index - windowRadius);
-    int endIndex = std::min<int>(m_rawEntries.size() - 1, index + windowRadius);
+    const auto sampleAt = [this](int sampleIndex, double &time, double &depth) {
+        if (!isValidEntryIndex(sampleIndex))
+            return false;
 
-    if (startIndex == endIndex)
+        const DiveEntry &entry = m_rawEntries.at(sampleIndex);
+        if (!hasSampleValue(entry.depth))
+            return false;
+
+        time = entry.time;
+        depth = entry.depth.toDouble();
+        return true;
+    };
+
+    const auto speedBetween = [](double startTime, double startDepth,
+                                 double endTime, double endDepth) {
+        const double deltaTime = endTime - startTime;
+        if (deltaTime <= 0.0)
+            return 0.0;
+
+        return ((endDepth - startDepth) / deltaTime) * 60.0;
+    };
+
+    double currentTime = 0.0;
+    double currentDepth = 0.0;
+    if (!sampleAt(index, currentTime, currentDepth))
         return 0.0;
 
-    const DiveEntry &startEntry = m_rawEntries.at(startIndex);
-    const DiveEntry &endEntry = m_rawEntries.at(endIndex);
+    const int startIndex = std::max(0, index - regressionRadius);
+    const int endIndex = std::min(entryCount - 1, index + regressionRadius);
 
-    const double deltaTime = endEntry.time - startEntry.time;
-    if (deltaTime <= 0.0)
-        return 0.0;
+    double timeSum = 0.0;
+    double depthSum = 0.0;
+    double sampleCount = 0.0;
 
-    const double startDepth = hasSampleValue(startEntry.depth) ? startEntry.depth.toDouble() : 0.0;
-    const double endDepth = hasSampleValue(endEntry.depth) ? endEntry.depth.toDouble() : 0.0;
+    for (int sampleIndex = startIndex; sampleIndex <= endIndex; ++sampleIndex) {
+        double sampleTime = 0.0;
+        double sampleDepth = 0.0;
+        if (sampleAt(sampleIndex, sampleTime, sampleDepth)) {
+            timeSum += sampleTime - currentTime;
+            depthSum += sampleDepth;
+            sampleCount += 1.0;
+        }
+    }
 
-    return ((startDepth - endDepth) / deltaTime) * 60.0;
+    if (sampleCount >= 2.0) {
+        const double averageTime = timeSum / sampleCount;
+        const double averageDepth = depthSum / sampleCount;
+        double numerator = 0.0;
+        double denominator = 0.0;
+
+        for (int sampleIndex = startIndex; sampleIndex <= endIndex; ++sampleIndex) {
+            double sampleTime = 0.0;
+            double sampleDepth = 0.0;
+            if (!sampleAt(sampleIndex, sampleTime, sampleDepth))
+                continue;
+
+            const double centeredTime = (sampleTime - currentTime) - averageTime;
+            numerator += centeredTime * (sampleDepth - averageDepth);
+            denominator += centeredTime * centeredTime;
+        }
+
+        if (denominator > 0.0)
+            return (numerator / denominator) * 60.0;
+    }
+
+    double neighborTime = 0.0;
+    double neighborDepth = 0.0;
+    if (index + 1 < entryCount && sampleAt(index + 1, neighborTime, neighborDepth))
+        return speedBetween(currentTime, currentDepth, neighborTime, neighborDepth);
+
+    if (index > 0 && sampleAt(index - 1, neighborTime, neighborDepth))
+        return speedBetween(neighborTime, neighborDepth, currentTime, currentDepth);
+
+    return 0.0;
 }
 
 QVariantMap SampleModel::buildSampleDetails(int index) const

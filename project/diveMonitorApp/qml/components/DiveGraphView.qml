@@ -12,16 +12,25 @@ Item {
     property bool showModeSelector: true
     property bool overlayModeSelector: false
     property bool showExpandButton: false
-    property int displayMode: displayDepth
+    property int displayMode: displayDepthSpeed
     property int selectedSampleIndex: -1
     property var selectedSampleData: null
     property point selectedDisplayPoint: Qt.point(0, 0)
     property bool samplePopupVisible: false
+    property bool rangeSelectionMode: false
+    property int rangeStartSampleIndex: -1
+    property int rangeEndSampleIndex: -1
+    property point rangeStartDisplayPoint: Qt.point(0, 0)
+    property point rangeEndDisplayPoint: Qt.point(0, 0)
 
     readonly property int displayDepth: 0
     readonly property int displaySpeed: 1
     readonly property int displayTemperature: 2
+    readonly property int displayDepthSpeed: 3
+    readonly property color depthCurveColor: appColors.accentColor
+    readonly property color speedCurveColor: "#E76F51"
     readonly property var yModeOptions: [
+        { label: "Profondeur + vitesse", mode: displayDepthSpeed },
         { label: "Profondeur", mode: displayDepth },
         { label: "Vitesse", mode: displaySpeed },
         { label: "Temperature", mode: displayTemperature }
@@ -36,12 +45,29 @@ Item {
         samplePopupVisible = false
     }
 
+    function clearRangeSelection() {
+        rangeStartSampleIndex = -1
+        rangeEndSampleIndex = -1
+        rangeStartDisplayPoint = Qt.point(0, 0)
+        rangeEndDisplayPoint = Qt.point(0, 0)
+    }
+
+    function clearAllSelections() {
+        clearSelectedSample()
+        clearRangeSelection()
+    }
+
+    function selectedDataIsRange() {
+        return selectedSampleData && !!selectedSampleData.isRange
+    }
+
     function setSelectedSample(details) {
         if (!details || !details.valid) {
             clearSelectedSample()
             return
         }
 
+        clearRangeSelection()
         selectedSampleIndex = Number(details.index)
         selectedSampleData = details
         refreshSelectedSamplePosition()
@@ -49,11 +75,64 @@ Item {
     }
 
     function refreshSelectedSamplePosition() {
+        refreshRangeSelectionPositions()
+
+        if (selectedDataIsRange()) {
+            if (rangeStartSampleIndex < 0 || rangeEndSampleIndex < 0)
+                return
+
+            selectedDisplayPoint = Qt.point(
+                (rangeStartDisplayPoint.x + rangeEndDisplayPoint.x) / 2,
+                (rangeStartDisplayPoint.y + rangeEndDisplayPoint.y) / 2
+            )
+            return
+        }
+
         if (selectedSampleIndex < 0)
             return
 
         const displayPoint = myDataSeries.displayPointAtIndex(selectedSampleIndex)
         selectedDisplayPoint = Qt.point(displayPoint.x, displayPoint.y)
+    }
+
+    function refreshRangeSelectionPositions() {
+        if (rangeStartSampleIndex >= 0) {
+            const startPoint = myDataSeries.displayPointAtIndex(rangeStartSampleIndex)
+            rangeStartDisplayPoint = Qt.point(startPoint.x, startPoint.y)
+        }
+
+        if (rangeEndSampleIndex >= 0) {
+            const endPoint = myDataSeries.displayPointAtIndex(rangeEndSampleIndex)
+            rangeEndDisplayPoint = Qt.point(endPoint.x, endPoint.y)
+        }
+    }
+
+    function setRangeSelectionPoint(details) {
+        if (!details || !details.valid) {
+            clearAllSelections()
+            return
+        }
+
+        const sampleIndex = Number(details.index)
+
+        if (rangeStartSampleIndex < 0 || rangeEndSampleIndex >= 0) {
+            clearSelectedSample()
+            rangeStartSampleIndex = sampleIndex
+            rangeEndSampleIndex = -1
+            refreshRangeSelectionPositions()
+            return
+        }
+
+        const rangeDetails = myDataSeries.sampleRangeDetails(rangeStartSampleIndex, sampleIndex)
+        if (!rangeDetails || !rangeDetails.valid)
+            return
+
+        rangeStartSampleIndex = Number(rangeDetails.startIndex)
+        rangeEndSampleIndex = Number(rangeDetails.endIndex)
+        selectedSampleIndex = -1
+        selectedSampleData = rangeDetails
+        refreshSelectedSamplePosition()
+        samplePopupVisible = true
     }
 
     function modeIndexFor(mode) {
@@ -110,7 +189,9 @@ Item {
 
             property int currentDisplayMode: root.displayMode
             property bool gridUpdatePending: false
+            property var xVisibleTicks: []
             property var yVisibleTicks: []
+            readonly property bool combinedMode: currentDisplayMode === root.displayDepthSpeed
 
             readonly property real targetMajorTickWidth: 100
             readonly property real targetMajorTickHeight: 80
@@ -118,17 +199,22 @@ Item {
             readonly property real yTickToGridGap: 25
             readonly property real yTickReservedWidth: 20
             readonly property real yLegendToTickGap: 10
-            readonly property real yLegendReservedWidth: 10
+            readonly property real yLegendReservedWidth: combinedMode ? 28 : 10
 
             readonly property real baseXMin: 0
             readonly property real baseXMax: Math.max(1, root.dive.diveTime)
-            readonly property real baseYMin: myDataSeries.displayMin
-            readonly property real baseYMax: myDataSeries.displayMax
+            readonly property real baseYMin: combinedMode
+                                             ? Math.min(myDataSeries.displayMin, speedDataSeries.displayMin)
+                                             : myDataSeries.displayMin
+            readonly property real baseYMax: combinedMode
+                                             ? Math.max(myDataSeries.displayMax, speedDataSeries.displayMax)
+                                             : myDataSeries.displayMax
 
             function setDisplayMode(mode) {
                 currentDisplayMode = mode
                 root.displayMode = mode
-                myDataSeries.setDisplayMode(mode)
+                myDataSeries.setDisplayMode(mode === root.displayDepthSpeed ? root.displayDepth : mode)
+                speedDataSeries.setDisplayMode(root.displaySpeed)
                 setClampedView(baseXMin, baseXMax, baseYMin, baseYMax)
                 root.refreshSelectedSamplePosition()
                 scheduleGridUpdate()
@@ -150,6 +236,7 @@ Item {
                 switch (currentDisplayMode) {
                 case root.displayTemperature:
                 case root.displaySpeed:
+                case root.displayDepthSpeed:
                     return 1
                 case root.displayDepth:
                 default:
@@ -161,11 +248,20 @@ Item {
                 switch (currentDisplayMode) {
                 case root.displayTemperature:
                 case root.displaySpeed:
+                case root.displayDepthSpeed:
                     return Number(value).toFixed(axisY.labelDecimals)
                 case root.displayDepth:
                 default:
                     return Math.abs(value).toFixed(axisY.labelDecimals)
                 }
+            }
+
+            function formatTimeMinutes(seconds) {
+                const minutes = Number(seconds) / 60.0
+                const tickMinutes = Math.max(0.000001, Number(axisX.tickInterval) / 60.0)
+                const decimals = tickMinutes < 0.5 ? 2 : 1
+
+                return minutes.toFixed(decimals).replace(".", ",")
             }
 
             function pickTimeStep(rawStep) {
@@ -310,6 +406,7 @@ Item {
                 axisY.tickInterval = yStep
                 axisX.subTickCount = pickTimeSubTickCount(xStep)
                 axisY.subTickCount = pickMetricSubTickCount(yStep)
+                xVisibleTicks = buildVisibleTicks(axisX.min, axisX.max, axisX.tickAnchor, axisX.tickInterval)
                 yVisibleTicks = buildVisibleTicks(axisY.min, axisY.max, axisY.tickAnchor, axisY.tickInterval)
             }
 
@@ -346,6 +443,7 @@ Item {
                 tickInterval: 60
                 subTickCount: 3
                 labelDecimals: 0
+                labelsVisible: false
                 onRangeChanged: graph.scheduleGridUpdate()
             }
 
@@ -369,7 +467,7 @@ Item {
 
                 onActiveChanged: {
                     if (active) {
-                        root.clearSelectedSample()
+                        root.clearAllSelections()
                         lastPoint = centroid.position
                     }
                 }
@@ -403,7 +501,7 @@ Item {
 
                 onActiveChanged: {
                     if (active) {
-                        root.clearSelectedSample()
+                        root.clearAllSelections()
                         lastScale = 1.0
                         lastCentroid = centroid.position
                     }
@@ -452,13 +550,24 @@ Item {
 
             SampleModel {
                 id: myDataSeries
-                color: appColors.accentColor
+                color: graph.currentDisplayMode === root.displaySpeed
+                       ? root.speedCurveColor
+                       : root.depthCurveColor
                 width: 4
             }
 
+            SampleModel {
+                id: speedDataSeries
+                visible: graph.combinedMode
+                color: root.speedCurveColor
+                width: 3
+            }
+
             Component.onCompleted: {
-                graph.setDisplayMode(root.displayMode)
                 myDataSeries.setEntries(root.dive.id)
+                speedDataSeries.setDisplayMode(root.displaySpeed)
+                speedDataSeries.setEntries(root.dive.id)
+                graph.setDisplayMode(root.displayMode)
                 graph.setClampedView(graph.baseXMin, graph.baseXMax, graph.baseYMin, graph.baseYMax)
                 graph.scheduleGridUpdate()
             }
@@ -467,14 +576,33 @@ Item {
         Item {
             id: graphOverlay
             anchors.fill: parent
-            readonly property bool selectedSampleVisible: root.samplePopupVisible
+            readonly property bool calloutVisible: root.samplePopupVisible
+                                                   && graph.plotArea.width > 0
+                                                   && graph.plotArea.height > 0
+                                                   && graphOverlay.isDisplayPointVisible(root.selectedDisplayPoint)
+            readonly property bool selectedSampleVisible: calloutVisible
                                                          && root.selectedSampleIndex >= 0
-                                                         && graph.plotArea.width > 0
-                                                         && graph.plotArea.height > 0
-                                                         && graphOverlay.isDisplayPointVisible(root.selectedDisplayPoint)
-            readonly property point selectedSamplePosition: selectedSampleVisible
+                                                         && !root.selectedDataIsRange()
+            readonly property point selectedSamplePosition: calloutVisible
                                                              ? graphOverlay.plotPositionForDataPoint(root.selectedDisplayPoint)
                                                              : Qt.point(0, 0)
+            readonly property bool rangeStartVisible: root.rangeSelectionMode
+                                                     && root.rangeStartSampleIndex >= 0
+                                                     && graph.plotArea.width > 0
+                                                     && graph.plotArea.height > 0
+                                                     && graphOverlay.isDisplayPointVisible(root.rangeStartDisplayPoint)
+            readonly property bool rangeEndVisible: root.rangeSelectionMode
+                                                   && root.rangeEndSampleIndex >= 0
+                                                   && graph.plotArea.width > 0
+                                                   && graph.plotArea.height > 0
+                                                   && graphOverlay.isDisplayPointVisible(root.rangeEndDisplayPoint)
+            readonly property point rangeStartPosition: rangeStartVisible
+                                                        ? graphOverlay.plotPositionForDataPoint(root.rangeStartDisplayPoint)
+                                                        : Qt.point(0, 0)
+            readonly property point rangeEndPosition: rangeEndVisible
+                                                      ? graphOverlay.plotPositionForDataPoint(root.rangeEndDisplayPoint)
+                                                      : Qt.point(0, 0)
+            readonly property bool rangeBandVisible: rangeStartVisible && rangeEndVisible
             readonly property real overlayPadding: 8
 
             function clamp(value, minValue, maxValue) {
@@ -549,21 +677,25 @@ Item {
                     const tapPoint = eventPoint.position
 
                     if (graphOverlay.pointInsideItem(tapPoint, expandButton)
+                        || graphOverlay.pointInsideItem(tapPoint, rangeCursorButton)
                         || graphOverlay.pointInsideItem(tapPoint, overlayModeSelector)) {
                         return
                     }
 
                     if (!graphOverlay.pointInPlotArea(tapPoint)) {
-                        root.clearSelectedSample()
+                        root.clearAllSelections()
                         return
                     }
 
-                    root.setSelectedSample(
-                        myDataSeries.sampleDetailsAtRenderCoordinates(
-                            tapPoint.x - graph.plotArea.x,
-                            tapPoint.y - graph.plotArea.y
-                        )
+                    const details = myDataSeries.sampleDetailsAtRenderCoordinates(
+                        tapPoint.x - graph.plotArea.x,
+                        tapPoint.y - graph.plotArea.y
                     )
+
+                    if (root.rangeSelectionMode)
+                        root.setRangeSelectionPoint(details)
+                    else
+                        root.setSelectedSample(details)
                 }
             }
 
@@ -591,13 +723,32 @@ Item {
                 )
             }
 
+            function xTickX(value, labelWidth) {
+                const axisRange = Math.max(1, axisX.max - axisX.min)
+                const tickRatio = (value - axisX.min) / axisRange
+                return graph.plotArea.x + graph.plotArea.width * tickRatio - labelWidth / 2
+            }
+
             Text {
                 id: xAxisLegend
                 x: graph.plotArea.x + (graph.plotArea.width - width) / 2
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 4
-                text: "Temps (s)"
+                text: "Temps (min)"
                 color: "#AAAAAA"
+            }
+
+            Repeater {
+                model: graph.xVisibleTicks
+
+                Text {
+                    required property real modelData
+
+                    x: graphOverlay.xTickX(modelData, width)
+                    y: graph.plotArea.y + graph.plotArea.height + 4
+                    text: graph.formatTimeMinutes(modelData)
+                    color: "#AAAAAA"
+                }
             }
 
             Repeater {
@@ -621,11 +772,78 @@ Item {
                 y: graph.plotArea.y
 
                 Text {
+                    visible: !graph.combinedMode
                     anchors.centerIn: parent
                     rotation: -90
                     text: graph.yAxisLegendText()
                     color: "#AAAAAA"
                 }
+
+                Text {
+                    visible: graph.combinedMode
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: parent.height * 0.25 - height / 2
+                    rotation: -90
+                    text: "Vit. (m/min)"
+                    color: root.speedCurveColor
+                    font.bold: true
+                }
+
+                Text {
+                    visible: graph.combinedMode
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: parent.height * 0.75 - height / 2
+                    rotation: -90
+                    text: "Prof. (m)"
+                    color: root.depthCurveColor
+                    font.bold: true
+                }
+            }
+
+            Rectangle {
+                id: selectedRangeBand
+                visible: graphOverlay.rangeBandVisible
+                x: Math.min(graphOverlay.rangeStartPosition.x, graphOverlay.rangeEndPosition.x)
+                y: graph.plotArea.y
+                width: Math.abs(graphOverlay.rangeEndPosition.x - graphOverlay.rangeStartPosition.x)
+                height: graph.plotArea.height
+                color: Qt.rgba(
+                    Qt.color(appColors.accentColor).r,
+                    Qt.color(appColors.accentColor).g,
+                    Qt.color(appColors.accentColor).b,
+                    0.12
+                )
+                border.width: 1
+                border.color: appColors.accentColor
+                z: 1
+            }
+
+            Rectangle {
+                id: rangeStartMarker
+                visible: graphOverlay.rangeStartVisible
+                x: graphOverlay.rangeStartPosition.x - width / 2
+                y: graphOverlay.rangeStartPosition.y - height / 2
+                width: 14
+                height: 14
+                radius: width / 2
+                color: appColors.bgColor
+                border.width: 3
+                border.color: appColors.accentColor
+                z: 2
+            }
+
+            Rectangle {
+                id: rangeEndMarker
+                visible: graphOverlay.rangeEndVisible
+                x: graphOverlay.rangeEndPosition.x - width / 2
+                y: graphOverlay.rangeEndPosition.y - height / 2
+                width: 14
+                height: 14
+                radius: width / 2
+                color: appColors.accentColor
+                border.width: 3
+                border.color: appColors.bgColor
+                z: 2
             }
 
             Rectangle {
@@ -644,7 +862,7 @@ Item {
 
             DiveSampleCallout {
                 id: sampleCallout
-                visible: graphOverlay.selectedSampleVisible
+                visible: graphOverlay.calloutVisible
                 x: graphOverlay.clampedCalloutX(width)
                 y: graphOverlay.clampedCalloutY(height)
                 z: 3
@@ -654,6 +872,24 @@ Item {
                 temperatureCelsius: root.selectedSampleData ? Number(root.selectedSampleData.temperatureCelsius) : 0
                 hasTemperature: root.selectedSampleData ? !!root.selectedSampleData.hasTemperature : false
                 speedMetersPerMinute: root.selectedSampleData ? Number(root.selectedSampleData.speedMetersPerMinute) : 0
+                rangeMode: root.selectedDataIsRange()
+                durationSeconds: root.selectedSampleData ? Number(root.selectedSampleData.durationSeconds) : 0
+                deltaDepthMeters: root.selectedSampleData ? Number(root.selectedSampleData.deltaDepthMeters) : 0
+                averageSpeedMetersPerMinute: root.selectedSampleData ? Number(root.selectedSampleData.averageSpeedMetersPerMinute) : 0
+            }
+
+            Button {
+                id: rangeCursorButton
+                x: graph.plotArea.x + 8
+                y: graph.plotArea.y + 8
+                text: checked ? "Plage active" : "Plage"
+                checkable: true
+                checked: root.rangeSelectionMode
+
+                onClicked: {
+                    root.rangeSelectionMode = !root.rangeSelectionMode
+                    root.clearAllSelections()
+                }
             }
 
             Button {

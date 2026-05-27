@@ -64,7 +64,7 @@ Rectangle {
                 InfoRow {
                     Layout.fillWidth: true
                     label: qsTr("Durée")
-                    value: dive.diveTime + " min"
+                    value: Number(dive.diveTime / 60).toFixed(0) + " min"
                     iconSource: "clock"
                 }
 

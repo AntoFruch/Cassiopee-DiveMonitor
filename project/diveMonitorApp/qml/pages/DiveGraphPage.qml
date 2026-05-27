@@ -7,7 +7,7 @@ Rectangle {
     id: root
 
     required property var dive
-    property int initialDisplayMode: 0
+    property int initialDisplayMode: 3
     property string title: dive.date
     property bool hideSettingsButton: true
     readonly property bool isLandscape: Window.width > Window.height

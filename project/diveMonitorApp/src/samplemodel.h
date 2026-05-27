@@ -38,6 +38,7 @@ public:
     Q_INVOKABLE void setDisplayMode(DisplayMode mode);
     Q_INVOKABLE QVariantMap sampleDetailsAtRenderCoordinates(qreal renderX, qreal renderY) const;
     Q_INVOKABLE QPointF displayPointAtIndex(int index) const;
+    Q_INVOKABLE QVariantMap sampleRangeDetails(int firstIndex, int secondIndex) const;
 
     qreal displayMin() const { return m_displayMin; }
     qreal displayMax() const { return m_displayMax; }
