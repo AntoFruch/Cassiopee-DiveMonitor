@@ -13,7 +13,7 @@ Rectangle {
 
     Text {
         anchors.centerIn: parent
-        text: title ? title : "SubSurface"
+        text: title ? title : "DiveMonitor"
         font.pixelSize: 22
         font.bold: true
         color: "white"
