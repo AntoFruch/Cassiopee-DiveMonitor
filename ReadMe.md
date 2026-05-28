@@ -1,28 +1,28 @@
-# Projet Cassiopee DiveMonitor (2026)
+# Projet Cassiopée DiveMonitor (2026)
 
 * Membres du Projet : BENOIS Loup, FRUCHET Antonin
 * Coordinateur : TAILLANDIER-LOIZE Thierry
 
-## Presentation du projet
+## Présentation du projet
 
-DiveMonitor est une application mobile de suivi de plongees developpee avec Qt/QML et C++. L'objectif du projet est de permettre a un plongeur d'importer les donnees de son ordinateur de plongee, de les enregistrer localement, puis de les consulter dans une interface simple avec liste, details et visualisation graphique.
+DiveMonitor est une application mobile de suivi de plongées développée avec Qt/QML et C++. L'objectif du projet est de permettre à un plongeur d'importer les données de son ordinateur de plongée, de les enregistrer localement, puis de les consulter dans une interface simple avec liste, détails et visualisation graphique.
 
-Le projet s'appuie sur `libdivecomputer` pour communiquer avec les ordinateurs de plongee compatibles et parser les donnees recuperees. Les plongees importees sont stockees dans une base SQLite locale afin de pouvoir etre consultees hors connexion. L'application gere notamment les metadonnees de plongee, les points temporels profondeur/temperature, ainsi que les fingerprints permettant d'eviter de reimporter des plongees deja presentes.
+Le projet s'appuie sur `libdivecomputer` pour communiquer avec les ordinateurs de plongée compatibles et parser les données récupérées. Les plongées importées sont stockées dans une base SQLite locale afin de pouvoir être consultées hors connexion. L'application gère notamment les métadonnées de plongée, les points temporels profondeur/température, ainsi que les fingerprints permettant d'éviter de réimporter des plongées déjà présentes.
 
-## Fonctionnalites principales
+## Fonctionnalités principales
 
-* Selection d'un ordinateur de plongee compatible.
-* Connexion a un appareil via les modes de transport exposes par `libdivecomputer`.
-* Import asynchrone des plongees pour ne pas bloquer l'interface.
-* Stockage local des plongees dans une base SQLite.
-* Liste des plongees sauvegardees.
-* Page de details avec duree, profondeur maximale, profondeur moyenne, temperatures et pression atmospherique.
-* Graphique de plongee permettant de visualiser l'evolution des donnees pendant la plongee.
+* Sélection d'un ordinateur de plongée compatible.
+* Connexion à un appareil via les modes de transport exposés par `libdivecomputer`.
+* Import asynchrone des plongées pour ne pas bloquer l'interface.
+* Stockage local des plongées dans une base SQLite.
+* Liste des plongées sauvegardées.
+* Page de détails avec durée, profondeur maximale, profondeur moyenne, températures et pression atmosphérique.
+* Graphique de plongée permettant de visualiser l'évolution des données pendant la plongée.
 
-## Repartition du travail
+## Répartition du travail
 
 * Interface utilisateur : BENOIS Loup
-* Backend, import des donnees, integration `libdivecomputer` et base de donnees : FRUCHET Antonin
+* Backend, import des données, intégration `libdivecomputer` et base de données : FRUCHET Antonin
 
 ### Planning Projet :
 ![Gantt Projet](./gantt/ganttProjet.png)
@@ -32,13 +32,13 @@ Le projet s'appuie sur `libdivecomputer` pour communiquer avec les ordinateurs d
 
 ## Architecture
 
-Le projet est organise autour de deux parties principales :
+Le projet est organisé autour de deux parties principales :
 
 * `diveMonitorApp/qml/` : interface graphique de l'application, pages, composants et navigation.
-* `diveMonitorApp/src/` : logique C++ exposee a QML, import depuis les ordinateurs de plongee, modeles Qt et persistance locale.
+* `diveMonitorApp/src/` : logique C++ exposée à QML, import depuis les ordinateurs de plongée, modèles Qt et persistance locale.
 
 Les classes backend principales sont :
 
-* `DiveComputerWrapper` : wrapper autour de `libdivecomputer`, responsable de la detection des appareils, de la connexion, de l'import et du parsing des plongees.
-* `DiveDatabase` : couche de persistance SQLite pour enregistrer les plongees, leurs points de mesure et les fingerprints.
-* `DiveListModel` et `SampleModel` : modeles Qt utilises par l'interface QML pour afficher les plongees et leurs donnees.
+* `DiveComputerWrapper` : wrapper autour de `libdivecomputer`, responsable de la détection des appareils, de la connexion, de l'import et du parsing des plongées.
+* `DiveDatabase` : couche de persistance SQLite pour enregistrer les plongées, leurs points de mesure et les fingerprints.
+* `DiveListModel` et `SampleModel` : modèles Qt utilisés par l'interface QML pour afficher les plongées et leurs données.

@@ -1,8 +1,0 @@
-#!/bin/sh
-
-/Users/anto/Qt/6.10.3/macos/libexec/qt-android-runner.py \
-    --adb "/Users/anto/Library/Android/sdk/platform-tools/adb" \
-    --build-path "/Users/anto/Cours/2A/Cassiopee-DiveMonitor/project/diveMonitorApp/build/Qt_6_10_3_for_Android_arm64_v8a-Release/android-build-appDiveMonitorApp" \
-    --apk "/Users/anto/Cours/2A/Cassiopee-DiveMonitor/project/diveMonitorApp/build/Qt_6_10_3_for_Android_arm64_v8a-Release/android-build-appDiveMonitorApp/appDiveMonitorApp.apk" \
-    $@
-
