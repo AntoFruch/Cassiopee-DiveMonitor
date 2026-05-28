@@ -1,0 +1,511 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{hyperref}
+\usepackage[dvipsnames]{xcolor} 
+\usepackage{float}
+\usepackage{dirtree}
+\usepackage[french]{babel}
+\usepackage[margin=3cm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+\usepackage{url}
+
+\title{Projet Cassiopée \textit{DiveMonitor} - Documentation}
+\author{Antonin Fruchet, Loup Benois}
+\date{Février à Mai 2026}
+
+\begin{document}
+
+\maketitle
+
+\paragraph{Dépôt Git :} \href{https://github.com/AntoFruch/Cassiopee-DiveMonitor}{\textcolor{blue}{Lien}}
+
+\tableofcontents
+
+\section{Introduction}
+\paragraph{}
+\textit{DiveMonitor} est une application mobile de gestion de plongée développée en C++ et Qt Quick, s'inspirant de Subsurface. Elle permet l'importation directe de données depuis un ordinateur de plongée vers une interface fluide. L'application centralise l'historique des immersions et propose, pour chaque session, un graphique interactif permettant une analyse précise des profils de profondeur, de vitesse et de température.
+
+\section{Installations et prérequis}
+\paragraph{}
+Cette section est détaille les étapes d'installations de tout ce qui est nécessaire au fonctionnement et à la compilation du projet.
+
+\subsection{Qt \& Qt Creator}
+\paragraph{}
+Si vous disposez déjà d'une license Qt Entreprise ou Education, passez à la sous-section 2.1.2.
+\subsubsection{Création d'un compte Qt}
+
+\begin{enumerate}
+    \item Se rendre sur \href{https://www.qt.io/development/qt-educational-license#application}{\textcolor{blue}{cette page}}.
+    \item Renseigner les informations demandées comme suit : 
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{images/create-account.png}
+        \caption{Formulaire pour l'accès à Qt EDU}
+        \label{fig:placeholder}
+    \end{figure}
+    \item Finaliser l'inscription, et valider la création du compte avec le mail de confirmation (peut prendre un petit peu de temps à à arriver).
+\end{enumerate}
+
+\subsubsection{Installation de Qt et Qt Creator}
+\begin{enumerate}
+    \item Se rendre sur sa page de profil et aller dans l'onglet \textbf{Qt Download} puis télécharger \textbf{Qt Online Installer}.
+    \item Ceci fait, lancer le programme, se connecter et avancer jusqu'à cette page:
+    
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\linewidth]{images/installer.png}
+        \caption{Choix du type d'installation}
+        \label{fig:placeholder}
+    \end{figure}
+    
+    \item Bien sélectionner \textbf{Custom Installation}.
+    \item Sur la page suivante cocher au moins ces cases :
+    
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\linewidth]{images/installer2.png}
+        \caption{Choix des éléments Qt à installer}
+        \label{fig:placeholder}
+    \end{figure}
+    
+    \item Choisir au moins un \textbf{Qt 6.10.3}.
+    \item Continuer et terminer l'installation.
+\end{enumerate}
+
+\paragraph{}
+\textbf{Qt et Qt Creator sont maintenant installés correctement sur votre machine.}
+
+\paragraph{}
+Essayer tout de même de compiler et d'éxécuter un des projets exemples fournis par Qt, tout devrait en théorie bien se passer.
+
+\paragraph{\textit{Note : }} À tout moment il est possible d'installer/désinstaller de nouveaux modules ou application Qt via \textit{Qt Maintenance Tool} qui s'est installé en même temps que le reste. L'interface est très semblable à l'installer.
+
+\subsection{Outils de développements Android}
+\paragraph{}
+\textit{Cette étape est obligatoire pour compiler et déployer l'application sur un appareil Android.}
+
+\subsubsection{JDK, Android NDK et Android SDK}
+\paragraph{}
+Pour configurer l'environnement Android, aller dans \textbf{Preferences} $>$ \textbf{SDKs} puis dans l'onglet \textbf{Android}. Cette page doit s'ouvrir, suivez les étapes suivantes :
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/JDK_NDK_SDK.png}
+    \caption{Panneau de configuration de l'environnement Android}
+    \label{fig:placeholder}
+\end{figure}
+
+\begin{enumerate}
+    \item Installer le \textit{Java Developpement Kit (JDK)} en cliquant sur le bouton \textcolor{red}{\textbf{1}}. Celui-ci renvoie vers une page de téléchargement ou la dernière version peut être téléchargée. Télécharger et installer le JDK.
+    \item Normalement, une fois le JDK installé le champ \textcolor{red}{\textbf{2}} devrait s'autoremplir, \textbf{Si ce n'est pas le cas}, renseigner le chemin manuellement.
+    \item Le \textit{Software Developpement Kit (SDK} a lui été installé en même temps que Qt et doit déjà apparaître. Si c'est effectivement le cas, cliquer sur le bouton \textcolor{red}{\textbf{3}} pour configurer les outils du SDK. Cela devrait aussi se charger des choses manquantes pour OpenSSL.
+\end{enumerate}
+
+\paragraph{}
+Après cela QtCreator devrait afficher que tout est bon.
+
+\subsubsection{Configuration de l'appareil Android}
+Il est possible, avec Qt Creator, de déployer l'application directement sur un appareil Android physique en le branchant à votre machine.
+
+\paragraph{}
+Pour ce faire, l'appareil Android doit être mis en mode développeur.(\textit{NB: Ceci n'est pas une manipulation dangereuse comme acquérir les droits root, le mode développeur est activable ou désactivable à tout moment.})
+
+\begin{enumerate}
+    \item Aller dans \textbf{Paramètres} $>$ \textbf{À propos du téléphone} (ou 
+équivalent)
+    \item Trouver \textbf{Numéro de version} (Build Number) puis cliquer 7 fois dessus de suite.
+    \item Normalement le téléphone est maintenant en mode developpeur, et un nouveau menu \textbf{Outils de développement} doit être disponible.
+    \item Dans ce nouveau menu, cocher \textbf{Débogage USB} pour permettre la connexion via USB à votre machine.
+\end{enumerate}
+
+\paragraph{}
+Brancher maintenant l'appareil à votre machine et vous devriez le voir apparaître dans QtCreator sous l'onglet \textbf{Devices} des Préferences.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Device.png}
+    \caption{Appareil branché et actif dans Qt Creator}
+    \label{fig:placeholder}
+\end{figure}
+
+\paragraph{}
+Il est maintenant possible de compiler pour Android et déployer une application directement sur l'appareil Android depuis votre machine quelle qu'elle soit.
+
+\subsection{Installations des Dépendances}
+Le projet utilise donc Qt et ses modules Quick, QuickControls2, Graphs, Sql et Concurrent (installés avec Qt normalement, si ce n'est pas le cas retourner l'installer depuis Qt Maintenance Tool), ainsi que la librairie libdivecomputer (version 0.9.0).
+
+\subsubsection{Installation de libdivecomputer}
+\textit{Libdivecomputer} est disponible pour Linux et Mac-OS sur \href{https://formulae.brew.sh/formula/libdivecomputer}{\textcolor{blue}{Homebrew}} uniquement. L'installer de cette manière est pratique pour le développement sur votre machine, en revanche cela ne permettra pas de compiler la librairie pour Android. (Il est possible de compiler la librairie à la main aussi à partir des binaires disponibles \href{https://libdivecomputer.org/releases/}{\textcolor{blue}{ici}})
+
+\paragraph{}
+La librairie est donc précompilée pour Android et inclue dans son entièreté dans la hiérarchie du projet sous \textit{lib/android\_libs}.
+
+\paragraph{}
+Si votre appareil n'est pas le même type d'android que ce pour quoi la librairie à été compilée, il est possible de la recompiler grâce au script de compilation de l'Annexe 1. (Ce script est présent sous \textit{lib/android\_libs/libdivecomputer-0.9.0} et s'appelle \textit{build\_android.sh})
+
+\section{Fonctionnement technique de l'application}
+
+\subsection{Arborescence}
+Le projet est organisé comme suit sous \textit{project/}
+
+\paragraph{}
+\begin{minipage}{1\textwidth} 
+\dirtree{%
+.1 DiveMonitorApp/.
+.2 src/ \DTcomment{Code source C++}.
+.2 qml/ \DTcomment{Code source QML (interface)}.
+.3 pages/.
+.3 overlay/.
+.3 components/.
+.2 resources/ \DTcomment{logos, icones etc}. 
+.2 lib/ \DTcomment{Dépendances (libdivecomputer pour android)}. 
+.2 android/ \DTcomment{Configuration pour le build et la compatibilté android}.
+}
+\end{minipage}
+
+\subsection{Vue d'ensemble de l'architecture}
+L'application est organisée autour de trois grandes couches. La première est
+l'interface graphique, écrite en QML, qui gère l'affichage des pages, les
+interactions utilisateur et la navigation. La deuxième est la couche C++, qui
+contient la logique métier de l'application : connexion à un ordinateur de
+plongée, importation des données, modèles exposés à QML et accès à la base de
+données. Enfin, la troisième couche correspond aux dépendances natives,
+principalement \textit{libdivecomputer}, utilisée pour communiquer avec les
+ordinateurs de plongée.
+
+Cette séparation permet de garder une interface relativement simple côté QML,
+tandis que les opérations plus complexes, comme l'importation ou le parsing des
+plongées, sont centralisées dans le code C++.
+
+\subsection{Interface graphique QML}
+
+L'interface est définie dans le dossier \textit{qml/}. Le fichier principal est
+\textit{Main.qml}. Il contient la fenêtre principale de l'application, le
+\texttt{StackView} utilisé pour naviguer entre les différentes pages, ainsi que
+les objets partagés comme les couleurs, les préférences utilisateur et l'état de
+l'ordinateur de plongée sélectionné.
+
+Les pages principales sont placées dans \textit{qml/pages/}. On y trouve par
+exemple la liste des plongées, la page de détails, la page graphique et la page
+d'importation. Les composants réutilisables sont séparés dans
+\textit{qml/components/} et les éléments affichés par-dessus les pages, comme le
+header ou le bouton d'ajout, sont dans \textit{qml/overlay/}.
+
+\subsection{Communication entre QML et C++}
+La communication entre l'interface QML et la logique C++ repose sur le système
+de propriétés et de méthodes invocables de Qt (mot clé \texttt{Q\_INVOKABLE} dans le C++). Dans \textit{main.cpp}, l'objet
+\texttt{DiveComputerWrapper} est exposé au moteur QML sous le nom
+\texttt{dcWrapper}. Cela permet aux fichiers QML d'appeler directement certaines
+méthodes C++ comme \texttt{connectToDevice()}, \texttt{disconnectDevice()},
+\texttt{refreshPorts()} ou \texttt{importDivesAsync()}.
+
+Les modèles de données, comme \texttt{DiveListModel} et \texttt{SampleModel},
+sont également enregistrés auprès du moteur QML. Ils permettent d'afficher les
+plongées et les échantillons sous une forme exploitable directement par les vues
+QML.
+
+\subsection{Gestion des ordinateurs de plongée}
+La classe centrale de cette partie est \texttt{DiveComputerWrapper}. Elle joue
+le rôle d'intermédiaire entre l'interface et \textit{libdivecomputer}. Elle
+maintient l'état de connexion, la liste des appareils supportés, les ports
+disponibles et les objets internes nécessaires à la communication avec un
+ordinateur de plongée.
+
+Lorsqu'un utilisateur choisit une marque, un modèle et un mode de connexion,
+l'application recherche le descripteur correspondant dans \textit{libdivecomputer}.
+Ce descripteur permet ensuite d'ouvrir une communication avec l'appareil. Sur
+desktop, l'ouverture se fait principalement via un port série classique. Sur
+Android, une couche spécifique est utilisée pour gérer les périphériques USB. ( voir section \textbf{\textit{3.9}} pour plus de détails sur la connexion USB avec Android).
+
+\subsection{Importation des plongées avec libdivecomputer}
+L'importation des plongées s'appuie sur \textit{libdivecomputer}. Une fois
+l'appareil connecté, l'application ouvre une session de communication avec
+l'ordinateur de plongée. Les plongées sont ensuite récupérées puis analysées afin
+d'en extraire les informations principales : date, durée, profondeur, température
+et échantillons du profil de plongée.
+
+L'importation est lancée de manière asynchrone avec \textit{QtConcurrent}. Cela
+évite de bloquer l'interface graphique pendant la récupération des données, qui
+peut prendre plusieurs secondes selon l'appareil et le nombre de plongées.
+
+\paragraph{}
+L'extraction des plongées s'opère avec la fonction \texttt{dc\_device\_foreach} de \textit{libdivecomputer}. Cette fonction itère sur chaque plongée trouvée dans l'appareil de plongée et exécute une fonction callback (passée en second argument) qui nous permet de traiter à notre guise les données de la plongée. En l’occurrence on enregistre les données dans une structure \texttt{DiveData} (voir header DiveDataStructure.h). A chaque itération il est nécessaire d'appeler la fonction \texttt{dc\_parser\_sample\_foreach} qui extrait désormais l'ensemble des points (temps, profondeur, température) depuis la plongée en cours. Cette fonction marche de la même manière que \texttt{dc\_device\_foreach} avec une fonction callback.
+
+La fonction \texttt{dc\_device\_foreach} arrête d'itérer quand son callback renvoie 0 ou quand toutes les plongées ont été parcourues. Ainsi on gère au début du callback le fingerprint (sorte d'id unique) de plongée, si ce callback ne correspond pas a celui déjà enregistré, on l'enregistre car il s'agit d'une potentielle plongée la plus récente et on continue à itérer. A a fin on recupère donc le fingerprint le plus récent qu'on insère en BDD à la place de l'ancien. Les fingerprints sont propres à un appareil, et donc stockés comme tel dans la base.
+
+\paragraph{}
+Les méthodes et fonctions d'import des plongées sont situé dans \textit{DiveComputerWrapper.c}:
+\begin{itemize}
+    \item \texttt{void DiveComputerWrapper::importDives()} : méthode notée \texttt{Q\_INVOKABLE}, point d'entrée pour le téléchargement des plongée depuis l'interface.
+    \item \texttt{int dive\_callback(...)} : callback pour les plongée (pour \texttt{dc\_device\_foreach} )
+    \item \texttt{void dive\_sample\_callback(...)} : callback pour les échantillons temporels (pour \texttt{dc\_parser\_sample\_foreach})
+\end{itemize}
+
+\subsection{Stockage local des données}
+Les plongées importées sont stockées localement grâce au module SQL de Qt et sont donc pesistentes d'une session à une autre. La
+classe \texttt{DiveDatabase} centralise l'accès à la base de données. Elle permet
+d'insérer de nouvelles plongées, de récupérer la liste des plongées existantes et
+de stocker certaines informations nécessaires aux imports suivants, comme le
+\textit{fingerprint} associé à un ordinateur de plongée.
+
+\paragraph{}
+Voir directement le header de la classe \texttt{DiveDatabase} pour voir les actions possibles sur la base de données.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/dbSchema.png}
+    \caption{Architecture de la base de données}
+    \label{fig:placeholder}
+\end{figure}
+
+\paragraph{}
+La fichier de base de donnée est créé dans le Local Storage de l'application :
+\begin{itemize}
+    \item \textbf{Android} : \texttt{\path{/data/user/0/org.subsurfadedivelog.mobile/files/}}
+    \item \textbf{Linux} : \texttt{\path{~/.local/share/appDiveMonitorApp/}}
+    \item \textbf{MacOS} : \texttt{\path{~/Library/Application Support/appDiveMonitorApp/}}
+    \item \textbf{Windows} : \texttt{\path{C:\Users\Utilisateur\AppData\Local\NomDeLApplication}}
+\end{itemize}
+
+\subsection{Affichage des plongées et des graphiques}
+
+\paragraph{}
+L'affichage d'une plongée se fait en deux temps. L'utilisateur arrive d'abord
+"sur la liste des plongées enregistrées, construite à partir du modèle
+\texttt{DiveListModel}. Lorsqu'il clique sur une plongée, l'objet correspondant
+est transmis à la page \textit{DiveDetails.qml}. Cette page affiche à la fois les
+informations générales de la plongée et un graphique permettant d'analyser son
+profil temporel.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/graphe.png}
+    \caption{Page de détail d'une plongée avec le graphe et les informations générales}
+    \label{fig:dive-graph-details}
+\end{figure}
+
+\paragraph{Composant graphique.}
+Le graphique est encapsulé dans un composant QML réutilisable :
+\textit{DiveGraphView.qml}. Ce composant est utilisé une première fois dans
+\textit{DiveDetails.qml}, où il occupe la partie supérieure de la page de détail,
+puis une seconde fois dans \textit{DiveGraphPage.qml}, qui sert à afficher le
+graphe en plus grand. Le bouton \textbf{Agrandir} de la page de détail ouvre
+cette seconde page en lui transmettant la plongée courante ainsi que le mode
+d'affichage actuellement sélectionné. Cela permet de conserver le même graphe et
+les mêmes données, tout en offrant plus de place à l'utilisateur pour naviguer
+dans le profil de plongée.
+
+\paragraph{Construction du tracé.}
+Le tracé du graphe repose sur le module \textit{Qt Graphs}. Côté QML, le
+composant principal est un \texttt{GraphsView}. Les courbes affichées dans ce
+\texttt{GraphsView} ne sont pas créées directement depuis le QML, mais depuis un
+modèle C++ appelé \texttt{SampleModel}. Cette classe hérite de
+\texttt{QLineSeries}, ce qui lui permet d'être utilisée directement comme une
+série de points dans le graphe QML. Elle est enregistrée dans \textit{main.cpp}
+avec \texttt{qmlRegisterType}, puis instanciée dans \textit{DiveGraphView.qml}
+comme un composant QML classique.
+
+\paragraph{Chargement des échantillons.}
+Au chargement du composant, \texttt{SampleModel} reçoit l'identifiant de la
+plongée avec la méthode \texttt{setEntries(root.dive.id)}. Cette méthode va
+chercher les échantillons temporels de la plongée dans la base de données, via
+\texttt{DiveDatabase::getDiveEntries}. Les points sont ensuite conservés en
+mémoire dans \texttt{m\_rawEntries}. L'intérêt de ce fonctionnement est que les
+données brutes ne sont chargées qu'une seule fois depuis la base. Lorsqu'on
+change le mode d'affichage du graphe, le modèle recalcule simplement les points
+de la courbe sans refaire de requête SQL.
+
+\paragraph{Modes d'affichage.}
+Chaque point du graphe correspond à une entrée de type \texttt{DiveEntry}. Son
+abscisse est toujours le temps, exprimé en secondes depuis le début de la
+plongée. Son ordonnée dépend du mode sélectionné :
+\begin{itemize}
+    \item \textbf{Profondeur} : l'ordonnée correspond à la profondeur en mètres.
+    La valeur est inversée dans le modèle C++ afin que la surface apparaisse en
+    haut du graphe et que la descente soit visuellement orientée vers le bas.
+    Les labels affichés sur l'axe utilisent ensuite la valeur absolue, pour que
+    l'utilisateur lise bien une profondeur positive.
+    \item \textbf{Température} : l'ordonnée correspond directement à la
+    température enregistrée pour l'échantillon courant.
+    \item \textbf{Vitesse} : l'ordonnée correspond à une vitesse verticale en
+    mètres par minute. Elle est calculée dans \texttt{SampleModel} à partir de
+    l'évolution de la profondeur autour du point courant.
+    \item \textbf{Profondeur + vitesse} : deux séries sont affichées en même
+    temps. La première représente la profondeur, et la seconde la vitesse.
+\end{itemize}
+
+\paragraph{Calcul de la vitesse.}
+Le calcul de la vitesse est volontairement fait côté C++ plutôt que côté QML,
+car il dépend des données brutes de la plongée. Pour un point donné, le modèle
+récupère plusieurs échantillons voisins autour du point courant, puis calcule une
+pente locale entre le temps et la profondeur. Cette pente est ensuite convertie
+en mètres par minute. Cette méthode permet d'obtenir une vitesse plus stable
+qu'une simple différence entre deux points consécutifs. Si le nombre de points
+autour de l'échantillon est insuffisant, le code utilise alors le point précédent
+ou le point suivant comme solution de secours.
+
+\paragraph{Sélection de l'ordonnée.}
+Le changement de mode d'affichage est contrôlé par une \texttt{ComboBox}
+présente au-dessus du graphe en affichage normal. En mode plein écran paysage,
+ce sélecteur est placé dans l'overlay du graphe afin de garder le plus de place
+possible pour la courbe. Les modes disponibles sont définis directement dans
+\textit{DiveGraphView.qml} : \textit{Profondeur + vitesse},
+\textit{Profondeur}, \textit{Vitesse} et \textit{Température}. Quand
+l'utilisateur choisit un mode, la fonction QML \texttt{applyDisplayMode()} est
+appelée, puis le \texttt{GraphsView} met à jour le mode courant, demande au
+\texttt{SampleModel} de recalculer la série et réinitialise les bornes visibles
+des axes.
+
+\paragraph{Gestion des axes.}
+Les axes sont gérés avec deux \texttt{ValueAxis}. L'axe horizontal représente le
+temps, de 0 à la durée totale de la plongée. L'axe vertical dépend du mode
+d'affichage courant et utilise les bornes calculées par \texttt{SampleModel}
+avec les propriétés \texttt{displayMin} et \texttt{displayMax}. Les labels des
+axes sont redessinés manuellement dans l'overlay. Cela permet d'adapter plus
+finement leur format : le temps est affiché en minutes, la profondeur est
+affichée en mètres positifs, et les valeurs de vitesse ou de température gardent
+une décimale.
+
+\paragraph{Grille dynamique.}
+Le pas de la grille est aussi calculé dynamiquement. Pour l'axe du temps, le
+code choisit un pas lisible parmi une liste de valeurs fixes, par exemple 5, 10,
+30 ou 60 secondes, puis des valeurs plus grandes si la plongée est longue. Pour
+l'axe vertical, le pas est choisi selon une logique classique en base 10 avec
+des valeurs de type 1, 2, 5 ou 10 multipliées par une puissance de 10. Cela
+évite d'avoir une grille trop dense sur un petit écran, ou au contraire trop peu
+de repères lorsque le graphe est agrandi.
+
+\paragraph{Navigation dans le graphe.}
+Le graphe est interactif. Un \texttt{DragHandler} permet de déplacer la zone
+visible, et un \texttt{PinchHandler} permet de zoomer ou dézoomer avec deux
+doigts. Les déplacements sont limités par les bornes réelles des données, afin
+d'éviter que l'utilisateur puisse sortir complètement du profil de plongée. Cette
+limitation est faite par la fonction \texttt{setClampedView()}, qui recalcule
+les bornes des axes en les gardant dans les bornes minimales et maximales du
+graphe.
+
+\paragraph{Sélection d'un point.}
+Un appui simple dans la zone du graphe permet de sélectionner un échantillon.
+Le point touché à l'écran est converti en coordonnées de données avec la méthode
+\texttt{dataPointCoordinatesAt}. Ensuite, \texttt{SampleModel} recherche
+l'échantillon le plus proche, principalement selon le temps, mais en tenant aussi
+compte de l'ordonnée affichée. Les informations du point sont renvoyées au QML
+sous forme de \texttt{QVariantMap} : temps, profondeur, température disponible
+ou non, et vitesse verticale. Ces informations sont affichées dans le composant
+\textit{DiveSampleCallout.qml}, sous la forme d'une petite fenêtre placée près
+du point sélectionné.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/graphe_avec_valeur_point.png}
+    \caption{Sélection d'un échantillon et affichage des valeurs associées}
+    \label{fig:dive-graph-point}
+\end{figure}
+
+\paragraph{Sélection d'une plage.}
+Le composant permet aussi de sélectionner une plage de la plongée. Le bouton
+\textbf{Plage} active un mode particulier : le premier appui sélectionne le
+début de la zone, et le second appui sélectionne la fin. Le modèle C++ calcule
+alors la durée de la plage, la différence de profondeur entre les deux points et
+la vitesse moyenne sur cet intervalle. Côté QML, la zone sélectionnée est
+représentée par une bande semi-transparente entre les deux points, avec deux
+marqueurs et une bulle d'information spécifique. Cette fonctionnalité permet par
+exemple d'analyser rapidement une phase de descente ou de remontée.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Graphe_plage.png}
+    \caption{Sélection d'une plage sur le profil de plongée}
+    \label{fig:dive-graph-range}
+\end{figure}
+
+\paragraph{Fichiers principaux.}
+Les fichiers principaux liés à l'affichage des plongées et des graphiques sont
+donc :
+\begin{itemize}
+    \item \textit{qml/pages/DiveList.qml} : affichage de la liste des plongées
+    disponibles en base.
+    \item \textit{qml/pages/DiveDetails.qml} : page de détail d'une plongée,
+    contenant le graphe et les informations générales.
+    \item \textit{qml/pages/DiveGraphPage.qml} : page dédiée à l'affichage
+    agrandi du graphe.
+    \item \textit{qml/components/DiveGraphView.qml} : composant principal du
+    graphe, qui gère l'affichage, les axes, le zoom, le déplacement et les
+    interactions.
+    \item \textit{qml/components/DiveSampleCallout.qml} : composant affichant
+    les détails d'un point ou d'une plage sélectionnée.
+    \item \textit{src/samplemodel.h} et \textit{src/samplemodel.cpp} : modèle
+    C++ qui charge les échantillons depuis la base, transforme les données en
+    points affichables et calcule les informations utilisées par l'interface.
+\end{itemize}
+
+\subsection{Spécificités Android et JNI}
+\paragraph{}
+L'utilisation des connexions USB sur Android n'a absolument rien à voir avec ce qu'on retrouve sur un ordinateur quelque soit le système d'exploitation. Sur ordinateur on peux exploiter les fichier sd'interface USB/UART (souvent dans \textit{/dev/} sous le nom \texttt{tty.*} sous Linux et MacOS) comme on le veux ce qui rend la tache très facile. En revanche Android requiert l'autorisation du système pour pouvoir voir et interagir avec ces interfaces. C'est pourquoi il faut pouvoir demander au système Andoid cette autorisation et traiter le problème ensuite.
+\paragraph{}
+Le problème étant largement hors de nos compétences, nous avons réutilisés des fichiers de code issus directement du \href{https://github.com/subsurface/subsurface}{\textcolor{blue}{GitHub officiel de SubSurface}}, notamment
+\texttt{SubsurfaceMobileActivity.java}, \texttt{AndroidSerial.java} et
+\texttt{serial\_usb\_android.cpp} avec son header. Ces fichiers conservent volontairement leur
+package d'origine afin de rester compatibles avec les signatures JNI utilisées
+par le code natif.
+
+Le rôle de cette couche est de détecter les périphériques USB, demander les
+permissions Android nécessaires, puis fournir à \textit{libdivecomputer} un flux
+de communication utilisable comme un port série. Le code C++ dialogue alors avec
+les classes Java via JNI (L'interface Native Java qui permet d'exploiter du code java depuis un autre langage comme C++)
+
+\paragraph{}
+Le recours aux classes Java est une nécessité technique : l'API d'Android pour la gestion de l'hôte USB est exposée au niveau du Framework (en Java), tandis que le noyau du système (un Kernel Linux écrit en C) restreint l'accès direct au matériel pour des raisons de sécurité.
+
+\section{Annexes}
+\subsection{Annexe 1 - Script de compilation de \textit{libdivecomputer} pour Android}
+\begin{verbatim}
+#!/bin/bash
+
+# 1. OS AND TOOLCHAIN DETECTION
+OS_TYPE=$(uname -s | tr '[:upper:]' '[:lower:]')
+if [ "$OS_TYPE" == "darwin" ]; then
+    HOST_TAG="darwin-x86_64"
+    CPU_COUNT=$(sysctl -n hw.ncpu)
+else
+    HOST_TAG="linux-x86_64"
+    CPU_COUNT=$(nproc)
+fi
+
+# 2. SET PATHS
+export NDK_PATH=$HOME/Library/Android/sdk/ndk/27.2.12479018
+export TOOLCHAIN=$NDK_PATH/toolchains/llvm/prebuilt/$HOST_TAG
+
+# 3. SET TARGET ARCHITECTURE
+export TARGET=aarch64-linux-android
+export API=24
+export AR=$TOOLCHAIN/bin/llvm-ar
+export AS=$TOOLCHAIN/bin/llvm-as
+export CC=$TOOLCHAIN/bin/$TARGET$API-clang
+export CXX=$TOOLCHAIN/bin/$TARGET$API-clang++
+export LD=$TOOLCHAIN/bin/ld
+export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
+export STRIP=$TOOLCHAIN/bin/llvm-strip
+
+# 4. CONFIGURE THE BUILD
+./configure \
+    --host=$TARGET \
+    --with-sysroot=$TOOLCHAIN/sysroot \
+    --prefix=$(pwd)/dist/android_arm64 \
+    --enable-shared \
+    --disable-static
+
+# 5. COMPILE AND INSTALL
+make clean
+make -j$CPU_COUNT
+make install
+
+echo "Build Complete pour $OS_TYPE !"
+
+\end{verbatim}
+\paragraph{}
+Ne pas oublier d'ajuster \textit{NDK\_PATH} à la version installée sur votre machine. La version est visible dans le chemin du NDK dans les préferences de \textit{Qt Creator}.
+\paragraph{}
+De même, pour viser une version différente de Android, modifier les paramètres sous "SET ARCHITECTURE"
+
+\end{document}
