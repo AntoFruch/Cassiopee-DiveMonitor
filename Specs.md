@@ -6,7 +6,7 @@ Celui-ci pourra être agrémenté au fil du projet si des spécifications suppl�
 
 ## Contraintes globales
 
-Il s'agit d'une application mobile, en ```C++/Qt```.
+Il s'agit d'une application mobile, en ```C++/Qt```, adaptée à une utilisation sur Mobile (Android)
 
 ## Interface
 
