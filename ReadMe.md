@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./livrables/documentation/img/DiveMonitor_logo.png" alt="DiveMonitor" width="110">
+</p>
+
 # Projet Cassiopée DiveMonitor (2026)
 
 * Membres du Projet : BENOIS Loup, FRUCHET Antonin
@@ -25,10 +29,10 @@ Le projet s'appuie sur `libdivecomputer` pour communiquer avec les ordinateurs d
 * Backend, import des données, intégration `libdivecomputer` et base de données : FRUCHET Antonin
 
 ### Planning Projet :
-![Gantt Projet](./gantt/ganttProjet.png)
+![Gantt Projet](./livrables/gantt/ganttProjet.png)
 
 ### Planning par personne :
-![Gantt /pers](./gantt/ganttParPersonne.png)
+![Gantt /pers](./livrables/gantt/ganttParPersonne.png)
 
 ## Architecture
 
