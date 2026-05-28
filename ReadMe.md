@@ -13,6 +13,10 @@ DiveMonitor est une application mobile de suivi de plongées développée avec Q
 
 Le projet s'appuie sur `libdivecomputer` pour communiquer avec les ordinateurs de plongée compatibles et parser les données récupérées. Les plongées importées sont stockées dans une base SQLite locale afin de pouvoir être consultées hors connexion. L'application gère notamment les métadonnées de plongée, les points temporels profondeur/température, ainsi que les fingerprints permettant d'éviter de réimporter des plongées déjà présentes.
 
+## Releases
+
+Les version releases sont disponibles sous forme d'apk dans le dossier [release](release). (L'application passe les tests de sécurité de Google Play)
+
 ## Fonctionnalités principales
 
 * Sélection d'un ordinateur de plongée compatible.
