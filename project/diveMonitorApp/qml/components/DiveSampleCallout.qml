@@ -78,7 +78,7 @@ Rectangle {
 
         Text {
             visible: root.rangeMode
-            text: "Delta profondeur: " + root.signedFixed(root.deltaDepthMeters, 1) + " m"
+            text: "\u0394 profondeur: " + root.signedFixed(root.deltaDepthMeters, 1) + " m"
             color: appColors.textColor
         }
 

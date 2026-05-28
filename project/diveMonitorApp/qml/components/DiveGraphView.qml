@@ -819,6 +819,42 @@ Item {
             }
 
             Rectangle {
+                id: selectedSampleTimeGuide
+                visible: graphOverlay.selectedSampleVisible
+                x: graphOverlay.selectedSamplePosition.x - width / 2
+                y: graph.plotArea.y
+                width: 1
+                height: graph.plotArea.height
+                color: "#CFCFCF"
+                opacity: 0.75
+                z: 1.5
+            }
+
+            Rectangle {
+                id: rangeStartTimeGuide
+                visible: graphOverlay.rangeStartVisible
+                x: graphOverlay.rangeStartPosition.x - width / 2
+                y: graph.plotArea.y
+                width: 1
+                height: graph.plotArea.height
+                color: "#CFCFCF"
+                opacity: 0.75
+                z: 1.5
+            }
+
+            Rectangle {
+                id: rangeEndTimeGuide
+                visible: graphOverlay.rangeEndVisible
+                x: graphOverlay.rangeEndPosition.x - width / 2
+                y: graph.plotArea.y
+                width: 1
+                height: graph.plotArea.height
+                color: "#CFCFCF"
+                opacity: 0.75
+                z: 1.5
+            }
+
+            Rectangle {
                 id: rangeStartMarker
                 visible: graphOverlay.rangeStartVisible
                 x: graphOverlay.rangeStartPosition.x - width / 2
