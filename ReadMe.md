@@ -19,7 +19,7 @@ Les version releases sont disponibles sous forme d'apk dans le dossier [release]
 
 ## Documentation
 
-Une documentation plus précise est disponible [ici](/livrables/documentation/docDiveMonitor2026.pdf)
+Une documentation plus précise est disponible [ici](/livrables/documentation/docDiveMonitor2026.pdf). Ce document à été écrit en LaTeX (code fourni) sur [Overleaf](http://overleaf.com)
 
 ## Fonctionnalités principales
 
