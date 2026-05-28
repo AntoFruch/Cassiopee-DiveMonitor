@@ -17,6 +17,10 @@ Le projet s'appuie sur `libdivecomputer` pour communiquer avec les ordinateurs d
 
 Les version releases sont disponibles sous forme d'apk dans le dossier [release](release). (L'application passe les tests de sécurité de Google Play)
 
+## Documentation
+
+Une documentation plus précise est disponible [ici](/livrables/documentation/docDiveMonitor2026.pdf)
+
 ## Fonctionnalités principales
 
 * Sélection d'un ordinateur de plongée compatible.
