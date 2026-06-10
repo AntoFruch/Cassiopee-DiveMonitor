@@ -7,6 +7,8 @@
 * Membres du Projet : BENOIS Loup, FRUCHET Antonin
 * Coordinateur : TAILLANDIER-LOIZE Thierry
 
+Projet finaliste de l'édition 2026 du projet Cassiopée de Télécom Sudparis. 2ème meilleure note avec 19.5/20
+
 ## Présentation du projet
 
 DiveMonitor est une application mobile de suivi de plongées développée avec Qt/QML et C++. L'objectif du projet est de permettre à un plongeur d'importer les données de son ordinateur de plongée, de les enregistrer localement, puis de les consulter dans une interface simple avec liste, détails et visualisation graphique.
